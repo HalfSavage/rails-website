@@ -211,6 +211,9 @@ def create_forum_thread(markov, prolific_members)
     post.member = Member.order("RANDOM()").first
   end 
 
+  # creation time is some time between "now" and when this member joined
+  post.created_at = Time.at((Time.now.to_f - post.member.created_at.to_f)*rand + post.member.created_at.to_f)
+
   # Choose forum. Some (not many) posts will be in more than one forum
   # If it's a mod, maybe they're posting in the mod forum?
   if post.member.is_moderator then
@@ -230,10 +233,15 @@ def create_forum_thread(markov, prolific_members)
     
     # Like above, 50% of the posts will come from the prolific members
     # TODO: Only pick members whose accounts were created after this thread was made
+
     if rand(0..100) < 50 
-      reply.member = prolific_members.sample
-    else 
-      reply.member = Member.order("RANDOM()").first
+      eligible_members = prolific_members.select {|pm| pm.created_at > post.created_at}
+      reply.member = eligible_members.sample
+    end 
+
+    # Could still be nil if all of the "prolific members" were created after this thread
+    if reply.member.nil? 
+      reply.member = Member.where('created_at > ?', post.created_at).order("RANDOM()").first
     end 
 
     # Some moderator replies should be in moderator voice
