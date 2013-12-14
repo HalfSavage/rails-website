@@ -1,0 +1,39 @@
+# Files in the config/locales directory are used for internationalization
+# and are automatically loaded by Rails. If you want to use locales other
+# than English, add the necessary files in this directory.
+#
+# To use the locales, use `I18n.t`:
+#
+#     I18n.t 'hello'
+#
+# In views, this is aliased to just `t`:
+#
+#     <%= t('hello') %>
+#
+# To use a different locale, set it with `I18n.locale`:
+#
+#     I18n.locale = :es
+#
+# This would use the information in config/locales/es.yml.
+#
+# To learn more, please read the Rails Internationalization guide
+# available at http://guides.rubyonrails.org/i18n.html.
+
+en:
+  hello: "Hello world"
+  activerecord:
+    errors:
+      template:
+        header:
+          one: "God damn it."
+          other: "There were %{count} problems and we just couldn't handle this shit."
+        body: "This is the situation we're dealing with."
+      models:
+        member:
+          attributes:
+            username:
+              blank: "...yeah, that's a great idea. A blank username. Genius."
+              taken: "...some other person is using that username already. What a jerk."
+            email:
+              blank: "...seriously? Your email is blank? I bet your genitals are invisible too."
+              taken: "...somebody already signed up with that email address. Did you forget? You may have an alcohol problem."

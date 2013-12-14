@@ -1,0 +1,15 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  name: MyString
+  is_active: false
+  is_moderator_only: false
+  is_visible_to_public: false
+  is_paid_member_only: false
+
+two:
+  name: MyString
+  is_active: false
+  is_moderator_only: false
+  is_visible_to_public: false
+  is_paid_member_only: false

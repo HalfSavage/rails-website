@@ -1,0 +1,21 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  thread_id: 1
+  member_id: 1
+  reply_to_post_id: 1
+  is_deleted: false
+  is_public_moderator_voice: false
+  is_private_moderator_voice: false
+  body: false
+  marked_as_answer: 2013-11-02 19:38:18
+
+two:
+  thread_id: 1
+  member_id: 1
+  reply_to_post_id: 1
+  is_deleted: false
+  is_public_moderator_voice: false
+  is_private_moderator_voice: false
+  body: false
+  marked_as_answer: 2013-11-02 19:38:18

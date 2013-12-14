@@ -1,0 +1,26 @@
+
+// Your custom LESS stylesheets goes here
+//
+// Since bootstrap was imported above you have access to its mixins which
+// you may use and inherit here
+//
+// If you'd like to override bootstrap's own variables, you can do so here as well
+// See http://twitter.github.com/bootstrap/customize.html#variables for their names and documentation
+//
+// Example:
+// @linkColor: #ff0000;
+
+.navbar-inverse .brand {
+}
+
+.navbar-inverse .brand,
+.navbar-inverse .nav > li > a {
+	color: rgb(200,200,200);
+}
+
+.navbar-inverse .navbar-inner {
+	background-color: rgb(44, 62, 80);
+	background-image: linear-gradient(to bottom, rgb(44, 62, 80), rgb(44, 62, 80));
+	border-radius: 0;
+	
+}
