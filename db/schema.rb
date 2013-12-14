@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20131211231328) do
+ActiveRecord::Schema.define(version: 20131214212312) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -46,6 +46,17 @@ ActiveRecord::Schema.define(version: 20131211231328) do
     t.string "gender_description"
     t.string "gender_abbreviation"
   end
+
+  create_table "likes", force: true do |t|
+    t.integer  "member_id"
+    t.integer  "post_id"
+    t.integer  "attachment_id"
+    t.integer  "event_id"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "likes", ["post_id", "member_id"], name: "index_likes_on_post_id_and_member_id", unique: true, using: :btree
 
   create_table "members", force: true do |t|
     t.string   "username"
@@ -97,7 +108,7 @@ ActiveRecord::Schema.define(version: 20131211231328) do
 
   create_table "posts", force: true do |t|
     t.integer  "member_id"
-    t.integer  "reply_to_post_id"
+    t.integer  "parent_id"
     t.boolean  "is_deleted"
     t.boolean  "is_public_moderator_voice"
     t.boolean  "is_private_moderator_voice"

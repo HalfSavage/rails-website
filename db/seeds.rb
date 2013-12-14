@@ -48,7 +48,7 @@ def markov_text(number_of_sentences, number_of_paragraphs, markov, max_length)
   }
   while (body.length < 10)
     # kludge! not sure why it returns too little sometimes
-    reply.body << ' ' << markov.generate_1_sentences 
+    body << ' ' << markov.generate_1_sentences 
   end
   body = [0..max_length-1] if body.length > max_length
   body
@@ -88,6 +88,25 @@ def seed_forums
   forums.each { |f|
     Forum.create(f) if !Forum.find_by_name(f[:name])
   }
+end 
+
+def add_likes_to_post(post)
+  # Maybe add some likes...
+  num_likes = [0,1,1,1,1,5,5,5,10,10,20].sample + rand(0..3)
+  print "(#{num_likes} likes)"
+  1.upto(num_likes) do 
+    like = Like.new(
+      post: post,
+      member: Member.order("RANDOM()").first,
+      created_at: Time.at((Time.now.to_f - post.created_at.to_f)*rand + post.created_at.to_f)
+    )
+    #debugger
+    begin
+      like.save
+    rescue
+    end
+  end 
+
 end 
 
 ####################
@@ -225,9 +244,14 @@ def create_forum_thread(markov, prolific_members)
   # Create a number of sentenses and paragraphs
   post.body = markov_text(SENTENCES_PER_FORUM_POST_PARAGRAPH, PARAGRAPHS_PER_FORUM_POST, markov, MAX_POST_LENGTH_CHARACTERS)
   post.save!
-
+  
   # Generate replies to this thread
   num_replies = REPLIES_PER_THREAD.sample + rand(-5..5)
+  num_replies = 0 if num_replies < 0
+  print " Replies: #{num_replies} "
+
+  add_likes_to_post(post) if rand(0..10) < 3
+  
   (1..num_replies).each { |j|
     reply = Post.new( { parent: post } )
     
@@ -239,9 +263,8 @@ def create_forum_thread(markov, prolific_members)
       reply.member = eligible_members.sample
     end 
 
-    # Could still be nil if all of the "prolific members" were created after this thread
     if reply.member.nil? 
-      reply.member = Member.where('created_at > ?', post.created_at).order("RANDOM()").first
+      reply.member = Member.order("RANDOM()").first
     end 
 
     # Some moderator replies should be in moderator voice
@@ -258,9 +281,12 @@ def create_forum_thread(markov, prolific_members)
       print '.'
     end 
 
+
     # Create a number of paragraphs & sentences. Put a couple of line breaks in front if it's the first sentence in a paragraph
+    reply.created_at = Time.at((Time.now.to_f - post.created_at.to_f)*rand + post.created_at.to_f)
     reply.body = markov_text(SENTENCES_PER_FORUM_POST_PARAGRAPH, PARAGRAPHS_PER_FORUM_POST, markov, MAX_POST_LENGTH_CHARACTERS)
     reply.save!
+    add_likes_to_post(reply) if rand(0..10) < 3
   } 
 end
 
@@ -288,9 +314,10 @@ markov = initialize_markov
 # We do this because in reality, most posts come from a small minority of members.
 prolific_members = Member.order("RANDOM()").take(Member.count / 10) + Member.moderators
   
-print "Creating #{THREADS_TO_CREATE} threads(s)"
+puts "Creating #{THREADS_TO_CREATE} threads(s)"
+print "Key:  . = reply   m = mod reply"
 (1..THREADS_TO_CREATE).each { |i|
-  print " #{i}"
+  print "\n[Thread #{i}] "
   create_forum_thread(markov, prolific_members)
 }
 

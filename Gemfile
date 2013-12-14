@@ -42,7 +42,7 @@ gem 'irbtools-more', require: false, :group => :development
 # Suppresses all the noisy blabbering in the console when running local server for development
 gem 'quiet_assets', :group => :development
 
-# gem 'debugger'
+gem 'debugger'
 # gem 'font-awesome-less'
 
 # Use ActiveModel has_secure_password
