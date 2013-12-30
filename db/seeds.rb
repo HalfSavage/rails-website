@@ -1,6 +1,6 @@
-require_relative 'usernames'
-require_relative 'subjects'
-require_relative 'messages'
+require_relative 'usernames-seeding'
+require_relative 'subjects-seeding'
+require_relative 'messages-seeding'
 
 # If there are less members than this, add enough members to get to this total
 MINIMUM_MEMBERS_COUNT = 600
@@ -44,7 +44,7 @@ SENTENCES_PER_FORUM_POST_PARAGRAPH = [1,2,2,3,4,5]
 MAX_POST_LENGTH_CHARACTERS = 8000
 
 # How many Markov chain gibberish sentences to create. Post bodies will be populated with these.
-MARKOV_SENTENCES_TO_GENERATE = 250
+MARKOV_SENTENCES_TO_GENERATE = 500
 
 # If there are less private messages than this, create enough private messages to get to this total
 MINIMUM_PRIVATE_MESSAGES_COUNT = 500
@@ -119,7 +119,7 @@ end
 def add_likes_to_post(post)
   # Maybe add some likes...
   num_likes = [0,1,1,1,1,5,5,5,10,10,20].sample + rand(0..3)
-  print "(#{num_likes} likes)"
+  #print "(#{num_likes} likes)"
   1.upto(num_likes) do
     like = Like.new(
       post: post,
@@ -139,12 +139,9 @@ end
 # Populate members #
 ####################
 
-def create_member
-
-  hs_usernames = HalfSavageUserNames.new
-
+def create_member(hs_usernames, gender)
   new_member = Member.new(
-    :gender => Gender.find([1,1,1,1,2,2,2,3].sample),
+    :gender => gender,
     :password => 'password',
     :date_of_birth => Time.now - (60*60*24*365)*rand(MEMBER_MIN_AGE_YEARS..MEMBER_MAX_AGE_YEARS),
     :created_at => Time.now - (60*60*24)*rand(1..MAX_MEMBER_ACCOUNT_AGE_DAYS) # between 1 and 700 days ago
@@ -184,8 +181,8 @@ end
 # Create Private Messages #
 ###########################
 
-def create_private_message(earliest_possible_message_time, latest_possible_message_time, should_be_reply_to_post)
-  hs_messages = HalfSavageMessages.new 
+def create_private_message(hs_messages, earliest_possible_message_time, latest_possible_message_time, should_be_reply_to_post)
+  
 
   if should_be_reply_to_post then 
     post = Post.where('created_at > ? and created_at < ?', earliest_possible_message_time, latest_possible_message_time).order("RANDOM()").first 
@@ -321,7 +318,9 @@ def create_forum_thread(markov_sentences, prolific_members, moderators)
   public_forums = Forum.active_public
   mod_forums = Forum.active_moderator
 
-  post = Post.new({ body: '', subject: HalfSavageSubjects.random_subject })
+  hs_subjects = HalfSavageSubjects.new
+
+  post = Post.new({ body: '', subject: hs_subjects.random_subject })
 
   # Approx 50% of the posts will come from the group of "prolific members"
   if rand(0..1) == 1
@@ -350,7 +349,7 @@ def create_forum_thread(markov_sentences, prolific_members, moderators)
   # Generate replies to this thread
   num_replies = REPLIES_PER_THREAD.sample + rand(-5..5)
   num_replies = 0 if num_replies < 0
-  print " Replies: #{num_replies} "
+  #print " Replies: #{num_replies} "
 
   add_likes_to_post(post) if rand(0..10) < 3
 
@@ -375,15 +374,15 @@ def create_forum_thread(markov_sentences, prolific_members, moderators)
       case rand(0..15)
       when 1
         reply.is_public_moderator_voice = true
-        print 'M'
+        #print 'M'
       when 2
         reply.is_private_moderator_voice = true
-        print 'm'
+        #print 'm'
       else
-        print '.'
+        #print '.'
       end
     else
-      print '.'
+      #print '.'
     end
 
     # TODO: chance of attaching a picture
@@ -415,13 +414,20 @@ puts ""
 puts '*** Seeding fake members ***'
 puts "Currently have #{Member.count} members; we'd like to have at least #{MINIMUM_MEMBERS_COUNT}."
 puts "Change MINIMUM_MEMBERS_COUNT if you'd like a different value here."
+
+
 if (Member.count >= MINIMUM_MEMBERS_COUNT) then
   puts "Ok, we have plenty of fake members. Moving along."
 else
   puts "Creating #{MINIMUM_MEMBERS_COUNT-Member.count} member(s) to get up to #{MINIMUM_MEMBERS_COUNT}"
+  male = Gender.find(1)
+  female = Gender.find(2)
+  complicated = Gender.find(3)
+  hs_usernames = HalfSavageUserNames.new
   1.upto(MINIMUM_MEMBERS_COUNT-Member.count) do |i|
+  hs_usernames = HalfSavageUserNames.new if i % 50 == 0
   print " #{i}... " if i % 10 == 0
-    create_member
+    create_member hs_usernames, [male, male, male, female, female, female, complicated].sample
   end
 end
 puts ''
@@ -447,9 +453,10 @@ else
   # We do this because in reality, most posts come from a small minority of members.
   prolific_members = Member.order("RANDOM()").take(Member.count / 10) + Member.moderators
 
-  print "Key:  . = reply   m = mod reply"
+  #print "Key:  . = reply   m = mod reply"
   (1..(MINIMUM_THREAD_COUNT - current_thread_count)).each { |i|
-    print "\n[Thread #{i}] "
+    #print "\n[Thread #{i}] "
+    print "#{i}... " if i % 10 == 0
     create_forum_thread(markov_sentences, prolific_members, Member.moderators)
   }
   puts " done creating threads and replies"
@@ -465,11 +472,12 @@ current_message_count = Message.count
 
 puts "Currently have #{current_message_count} private messages; we'd like to have at least #{MINIMUM_PRIVATE_MESSAGES_COUNT}."
 puts "Change MINIMUM_PRIVATE_MESSAGES_COUNT if you'd like a different value here."
+
 if (current_message_count >= MINIMUM_PRIVATE_MESSAGES_COUNT) then 
   puts "Ok, we have plenty of fake private messages."
 else 
   puts "Creating #{MINIMUM_PRIVATE_MESSAGES_COUNT - current_message_count} fake private messages."
-
+  hs_messages = HalfSavageMessages.new 
   # the earliest time at which the fake messages' created_at time should be set
   # take the 5th-oldest account's created_at time.... yeah this is arbitrary
   # and will throw an error if there are less than 5 member accounts
@@ -477,11 +485,9 @@ else
   latest_message_time = Member.order("created_at desc").take(5)[4].created_at
   
   (1..(MINIMUM_PRIVATE_MESSAGES_COUNT - current_message_count)).each { |i|
-    if (i == 1) || (i % 10 == 0) then 
-      print i 
-      print '... '
-    end
-    create_private_message(earliest_message_time, latest_message_time, (rand(4)==0))
+    print "#{i}... " if (i == 1) || (i % 10 == 0) 
+    hs_messages = HalfSavageMessages.new  if (i % 25 == 0)
+    create_private_message(hs_messages, earliest_message_time, latest_message_time, (rand(4)==0))
   }
   puts " done creating fake messages"
 end 
