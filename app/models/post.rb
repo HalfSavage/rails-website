@@ -1,10 +1,18 @@
 class Post < ActiveRecord::Base
-  has_many :replies, class_name: 'Post', foreign_key: 'reply_to_post_id'
+  # The parent is blank if it's the threads OP
+  # The parent could be the OP or another post in that thread, if 
+  # it's a nested reply
   belongs_to :parent, class_name: 'Post'
+  has_many :replies, class_name: 'Post', foreign_key: 'parent_id'
+  
+  # The thread is always the op
+  belongs_to :thread, class_name: 'Post'
+  has_many :thread_replies, class_name: 'Post', foreign_key: 'thread_id'
+
   belongs_to :member
   has_many :forums_posts
   has_many :forums, -> { uniq },  through: :forums_posts  # see for explanation of uniq: http://stackoverflow.com/questions/16569994/deprecation-warning-when-using-has-many-through-uniq-in-rails-4
-
+  has_many :post_actions
 
   after_initialize :set_defaults, on: [:create]
 
@@ -20,5 +28,18 @@ class Post < ActiveRecord::Base
     self.is_deleted = false if (self.is_deleted.nil?)
     self.is_public_moderator_voice = false if (self.is_public_moderator_voice.nil?)
     self.is_private_moderator_voice = false if (self.is_private_moderator_voice.nil?)
+  end 
+
+  def is_thread?
+    parent.nil?
+  end 
+
+  def in_public_forum? 
+    return parent.in_public_forum if parent 
+
+    forums.each { |f| 
+      return true if !f.is_moderator_only
+    }
+    false
   end 
 end

@@ -9,6 +9,8 @@ class Forum < ActiveRecord::Base
   scope :active_public, -> { where(is_visible_to_public: true, is_active: true) } 
   scope :active_moderator, -> { where(is_moderator_only: true, is_active: true) } 
 
+
+
   def set_defaults 
     self.is_active = true if (self.is_active.nil?)
     self.is_moderator_only = false if (self.is_moderator_only.nil?)

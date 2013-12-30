@@ -21,6 +21,7 @@ module Halfsavage
     # config.i18n.default_locale = :de
 
     config.assets.paths << "#{Rails.root}/app/assets/fonts"
+    config.i18n.enforce_available_locales = true
     config.i18n.default_locale = :en
   end
 end

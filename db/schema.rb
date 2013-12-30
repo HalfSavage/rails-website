@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20131214212312) do
+ActiveRecord::Schema.define(version: 20131229221413) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -89,14 +89,33 @@ ActiveRecord::Schema.define(version: 20131214212312) do
   add_index "members", ["email"], name: "index_members_on_email", unique: true, using: :btree
   add_index "members", ["reset_password_token"], name: "index_members_on_reset_password_token", unique: true, using: :btree
 
+  create_table "message_types", force: true do |t|
+    t.string "name"
+  end
+
   create_table "messages", force: true do |t|
-    t.integer  "member_id"
+    t.integer  "member_to_id"
+    t.integer  "member_from_id"
     t.integer  "message_type_id"
-    t.string   "body"
-    t.boolean  "seen"
+    t.string   "body",                 limit: 8000
+    t.datetime "seen"
+    t.integer  "post_id"
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.integer  "reply_to_post_id"
+    t.datetime "deleted_by_sender"
+    t.datetime "deleted_by_recipient"
+  end
+
+  add_index "messages", ["member_to_id", "message_type_id"], name: "index_messages_on_member_to_id_and_message_type_id", using: :btree
+  add_index "messages", ["member_to_id", "seen", "message_type_id"], name: "index_messages_on_member_to_id_and_seen_and_message_type_id", using: :btree
+
+  create_table "post_action_types", force: true do |t|
+    t.string   "name"
+    t.boolean  "moderator_only"
+    t.boolean  "active"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+    t.boolean  "note_required"
   end
 
   create_table "post_actions", force: true do |t|
@@ -104,7 +123,11 @@ ActiveRecord::Schema.define(version: 20131214212312) do
     t.integer  "post_action_type_id"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.integer  "post_id"
+    t.string   "note"
   end
+
+  add_index "post_actions", ["post_id", "post_action_type_id", "created_at"], name: "post_actions_post_id_etc", using: :btree
 
   create_table "posts", force: true do |t|
     t.integer  "member_id"
@@ -117,6 +140,7 @@ ActiveRecord::Schema.define(version: 20131214212312) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.string   "subject"
+    t.integer  "thread_id"
   end
 
 end

@@ -4,8 +4,8 @@ class Member < ActiveRecord::Base
   devise :database_authenticatable, :registerable,
          :recoverable, :rememberable, :trackable, :validatable
 
-  after_initialize :set_defaults, on: [:create]
-  
+  after_initialize :foo, on: [:create]
+
   belongs_to :gender
   has_many :referrals, class_name: 'Member', foreign_key: 'member_id_referred'
   belongs_to :referred_by, class_name: 'Member' 
@@ -21,7 +21,7 @@ class Member < ActiveRecord::Base
 
   protected
 
-  def set_defaults
+  def foo
     self.is_active = true if (self.is_active.nil?)
     self.is_moderator = false if (self.is_moderator.nil?)
     self.is_supermoderator = false if (self.is_supermoderator.nil?)
