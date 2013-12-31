@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20131230035409) do
+ActiveRecord::Schema.define(version: 20131231015232) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -105,6 +105,7 @@ ActiveRecord::Schema.define(version: 20131230035409) do
     t.datetime "updated_at"
     t.datetime "deleted_by_sender"
     t.datetime "deleted_by_recipient"
+    t.boolean  "is_moderator_voice"
   end
 
   add_index "messages", ["member_to_id", "message_type_id"], name: "index_messages_on_member_to_id_and_message_type_id", using: :btree

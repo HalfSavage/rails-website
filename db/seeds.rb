@@ -17,7 +17,7 @@ MAX_MEMBER_ACCOUNT_AGE_DAYS = 700
 CHANCE_OF_MEMBER_BEING_REFERRED = 0.25
 
 # If less than this many mods exist, we'll make this many members mods.
-MINIMUM_NUMBER_OF_MODS = 15
+MINIMUM_MOD_COUNT = 25
 
 # The random members we create will have an age between MEMBER_MAX_AGE_YEARS and MEMBER_MIN_AGE_YEARS
 MEMBER_MAX_AGE_YEARS = 45.0
@@ -48,8 +48,6 @@ MARKOV_SENTENCES_TO_GENERATE = 500
 
 # If there are less private messages than this, create enough private messages to get to this total
 MINIMUM_PRIVATE_MESSAGES_COUNT = 500
-
-
 
 def markov_text(number_of_sentences, number_of_paragraphs, markov_sentences, max_length)
   body = ''
@@ -132,7 +130,6 @@ def add_likes_to_post(post)
     rescue
     end
   end
-
 end
 
 ####################
@@ -173,7 +170,6 @@ def create_member(hs_usernames, gender)
   else
     new_member.save
   end
-
   new_member
 end
 
@@ -182,8 +178,6 @@ end
 ###########################
 
 def create_private_message(hs_messages, earliest_possible_message_time, latest_possible_message_time, should_be_reply_to_post)
-  
-
   if should_be_reply_to_post then 
     post = Post.where('created_at > ? and created_at < ?', earliest_possible_message_time, latest_possible_message_time).order("RANDOM()").first 
     message_created_at = Time.at((latest_possible_message_time.to_f - [earliest_possible_message_time, post.created_at].min.to_f)*rand + [earliest_possible_message_time, post.created_at].min.to_f)
@@ -217,6 +211,9 @@ def create_private_message(hs_messages, earliest_possible_message_time, latest_p
     new_message.seen = Time.at((Time.now.to_f - new_message.created_at.to_f)*rand + new_message.created_at.to_f)
   end
 
+  if new_message.member_from.is_moderator and rand(2)==0 then 
+    new_message.is_moderator_voice = true
+  end 
 
   if !new_message.valid? then 
     puts "\nMessage can't be fucking saved!"
@@ -413,9 +410,7 @@ puts ""
 
 puts '*** Seeding fake members ***'
 puts "Currently have #{Member.count} members; we'd like to have at least #{MINIMUM_MEMBERS_COUNT}."
-puts "Change MINIMUM_MEMBERS_COUNT if you'd like a different value here."
-
-
+puts "Change MINIMUM_MEMBERS_COUNT in db/seeds.rb if you'd like a different value here."
 if (Member.count >= MINIMUM_MEMBERS_COUNT) then
   puts "Ok, we have plenty of fake members. Moving along."
 else
@@ -430,18 +425,27 @@ else
     create_member hs_usernames, [male, male, male, female, female, female, complicated].sample
   end
 end
-puts ''
+current_moderator_count = Member.moderators.count 
+if (current_moderator_count >= MINIMUM_MOD_COUNT)
+  puts "Okay, we have plenty of mods (#{current_moderator_count} of #{MINIMUM_MOD_COUNT}). Moving along."
+else
+  some_losers = Member.where("is_moderator=false").order("RANDOM()").take(MINIMUM_MOD_COUNT - current_moderator_count)
+  print "Making #{some_losers.count} into mods... "
+  some_losers.each { |loser| 
+    loser.is_moderator = true
+    loser.save!
+  }
+  puts "done"
+end 
 
 #####################
 # Threads & Replies #
 #####################
 
-puts '*** Seeding fake forum threads & replies ***'
-
-
+puts '\n*** Seeding fake forum threads & replies ***'
 current_thread_count = Post.threads.count 
 puts "Currently have #{current_thread_count} threads; we'd like to have at least #{MINIMUM_THREAD_COUNT}."
-puts "Change MINIMUM_THREAD_COUNT if you'd like a different value here."
+puts "Change MINIMUM_THREAD_COUNT in db/seeds.rb if you'd like a different value here."
 
 if (current_thread_count >= MINIMUM_THREAD_COUNT) then 
   puts "Ok, we have plenty of fake threads. Moving along."
@@ -461,17 +465,16 @@ else
   }
   puts " done creating threads and replies"
 end
-puts ''
 
 ####################
 # Private Messages #
 ####################
 
-puts '*** Seeing fake private messages ***'
+puts '\n*** Seeing fake private messages ***'
 current_message_count = Message.count 
 
 puts "Currently have #{current_message_count} private messages; we'd like to have at least #{MINIMUM_PRIVATE_MESSAGES_COUNT}."
-puts "Change MINIMUM_PRIVATE_MESSAGES_COUNT if you'd like a different value here."
+puts "Change MINIMUM_PRIVATE_MESSAGES_COUNT in db/seeds.rb if you'd like a different value here."
 
 if (current_message_count >= MINIMUM_PRIVATE_MESSAGES_COUNT) then 
   puts "Ok, we have plenty of fake private messages."
