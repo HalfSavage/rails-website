@@ -117,14 +117,12 @@ end
 def add_likes_to_post(post)
   # Maybe add some likes...
   num_likes = [0,1,1,1,1,5,5,5,10,10,20].sample + rand(0..3)
-  #print "(#{num_likes} likes)"
   1.upto(num_likes) do
     like = Like.new(
       post: post,
       member: Member.order("RANDOM()").first,
       created_at: Time.at((Time.now.to_f - post.created_at.to_f)*rand + post.created_at.to_f)
     )
-    #debugger
     begin
       like.save
     rescue
@@ -238,7 +236,6 @@ def create_moderators(number_of_mods_desired)
     new_mods = Member.where(!:is_moderator).order("RANDOM()").take(MINIMUM_NUMBER_OF_MODS - number_of_mods)
     new_mods.each { |m|
       print "#{m.username} "
-      #debugger
       if (m.valid?)
         m.update(is_moderator: true)
       else
@@ -308,7 +305,6 @@ def get_markov_sentences
 end
 
 # Creates & saves a single forum thread, with replies
-
 def create_forum_thread(markov_sentences, prolific_members, moderators)
 
   # Get the forums
@@ -346,7 +342,6 @@ def create_forum_thread(markov_sentences, prolific_members, moderators)
   # Generate replies to this thread
   num_replies = REPLIES_PER_THREAD.sample + rand(-5..5)
   num_replies = 0 if num_replies < 0
-  #print " Replies: #{num_replies} "
 
   add_likes_to_post(post) if rand(0..10) < 3
 
@@ -355,8 +350,6 @@ def create_forum_thread(markov_sentences, prolific_members, moderators)
 
     # Like above, 50% of the posts will come from the prolific members
     # TODO: Only pick members whose accounts were created after this thread was made
-
-
     if rand(0..100) < 50
       eligible_members = prolific_members.select {|pm| pm.created_at > post.created_at}
       reply.member = eligible_members.sample
@@ -457,9 +450,7 @@ else
   # We do this because in reality, most posts come from a small minority of members.
   prolific_members = Member.order("RANDOM()").take(Member.count / 10) + Member.moderators
 
-  #print "Key:  . = reply   m = mod reply"
   (1..(MINIMUM_THREAD_COUNT - current_thread_count)).each { |i|
-    #print "\n[Thread #{i}] "
     print "#{i}... " if i % 10 == 0
     create_forum_thread(markov_sentences, prolific_members, Member.moderators)
   }
