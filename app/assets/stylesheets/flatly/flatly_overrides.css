@@ -1,8 +1,9 @@
 body {
-  padding-top: 60px;  /* so we can have the fixed navbar */
+  padding-top: 70px;  /* so we can have the fixed navbar */
 }
 
-.footer {
-  color: #777;
+footer {
+	margin-top: 5em;
+  color: #ccc;
 }
 

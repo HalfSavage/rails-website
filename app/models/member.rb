@@ -1,15 +1,20 @@
 class Member < ActiveRecord::Base
+  attr_accessor :login
+
   # Include default devise modules. Others available are:
   # :confirmable, :lockable, :timeoutable and :omniauthable
   devise :database_authenticatable, :registerable,
          :recoverable, :rememberable, :trackable, :validatable
 
+  # Filters
   after_initialize :foo, on: [:create]
 
+  # Relations
   belongs_to :gender
   has_many :referrals, class_name: 'Member', foreign_key: 'member_id_referred'
   belongs_to :referred_by, class_name: 'Member' 
 
+  # Validations
   validates :username, uniqueness: {case_sensitive: false}
   validates :gender, presence: true
   validates :email, uniqueness: {case_sensitive: false}
@@ -18,6 +23,17 @@ class Member < ActiveRecord::Base
 
   scope :moderators, -> { where(is_moderator: true) } 
   scope :supermoderators, -> { where(is_supermoderator: true) }
+
+  # Have to override this to allow login by email OR username (Devise default is email only)
+  # See: https://github.com/plataformatec/devise/wiki/How-To%3a-Allow-users-to-sign-in-using-their-username-or-email-address
+  def self.find_first_by_auth_conditions(warden_conditions)
+    conditions = warden_conditions.dup
+    if login = conditions.delete(:login)
+      where(conditions).where(["lower(username) = :value OR lower(email) = :value", { :value => login.downcase }]).first
+    else
+      where(conditions).first
+    end
+  end
 
   protected
 
