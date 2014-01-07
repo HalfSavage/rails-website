@@ -27,17 +27,16 @@ gem 'jquery-rails'
 #gem 'turbolinks'
 
 # Build JSON APIs with ease. Read more: https://github.com/rails/jbuilder
-gem 'jbuilder', '~> 1.2'
+gem 'jbuilder'
 
 group :doc do
   # bundle exec rake doc:rails generates the API under doc/api.
   gem 'sdoc', require: false
 end
 
-gem 'less-rails' #Sprockets (what Rails 3.1 uses for its asset pipeline) supports LESS
+# gem 'less-rails' #Sprockets (what Rails 3.1 uses for its asset pipeline) supports LESS
 
-# TODO: should only be enabled for development environemnt
-gem 'irbtools-more', require: false, :group => :development
+gem 'irbtools', require: false, :group => :development
 
 # Suppresses all the noisy blabbering in the console when running local server for development
 gem 'quiet_assets', :group => :development
@@ -55,7 +54,7 @@ gem 'quiet_assets', :group => :development
 # gem 'capistrano', group: :development
 
 # Use debugger
-# gem 'debugger', group: [:development, :test]
+gem 'debugger', group: [:development, :test]
 
 # Used in seeds.rb to generate thread and message content
 gem 'marky_markov', group: [:development, :test]

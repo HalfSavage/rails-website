@@ -1,5 +1,5 @@
 class WelcomeController < ApplicationController
   def index
-    "This is Half Savage, and so are you."
+    "This is the controller speaking."
   end
 end

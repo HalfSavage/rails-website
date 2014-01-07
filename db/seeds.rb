@@ -390,7 +390,7 @@ end
 # Seed various tables #
 #######################
 
-puts "*** Seeding Random Bullshit ***"
+puts "*** Seeding forums, genders, message types, post action types ***"
 seed_forums
 seed_genders
 seed_message_types
@@ -423,7 +423,7 @@ if (current_moderator_count >= MINIMUM_MOD_COUNT)
   puts "Okay, we have plenty of mods (#{current_moderator_count} of #{MINIMUM_MOD_COUNT}). Moving along."
 else
   some_losers = Member.where("is_moderator=false").order("RANDOM()").take(MINIMUM_MOD_COUNT - current_moderator_count)
-  print "Making #{some_losers.count} into mods... "
+  print "\nMaking #{some_losers.count} into mods... "
   some_losers.each { |loser| 
     loser.is_moderator = true
     loser.save!
@@ -435,7 +435,7 @@ end
 # Threads & Replies #
 #####################
 
-puts '\n*** Seeding fake forum threads & replies ***'
+puts "\n*** Seeding fake forum threads & replies ***"
 current_thread_count = Post.threads.count 
 puts "Currently have #{current_thread_count} threads; we'd like to have at least #{MINIMUM_THREAD_COUNT}."
 puts "Change MINIMUM_THREAD_COUNT in db/seeds.rb if you'd like a different value here."
@@ -461,7 +461,7 @@ end
 # Private Messages #
 ####################
 
-puts '\n*** Seeing fake private messages ***'
+puts "\n*** Seeing fake private messages ***"
 current_message_count = Message.count 
 
 puts "Currently have #{current_message_count} private messages; we'd like to have at least #{MINIMUM_PRIVATE_MESSAGES_COUNT}."
@@ -485,4 +485,4 @@ else
   }
   puts " done creating fake messages"
 end 
-puts ''
+puts ""
