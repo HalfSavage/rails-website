@@ -241,8 +241,8 @@ class HalfSavageUserNames
       name = name.gsub(/[\s'’]/,'') + rand(1..1000).to_s
     when 17..19
       name = name.underscore
-    when 13 
-      replacement = %w{☆ ♡ xx .o. }.sample
+    when 20..25
+      replacement = %w{☆ ♡ xx .o. :: -}.sample
       name = "#{replacement}#{name}#{replacement}"
     when 14 
       name = name.gsub(/[\s]/, %w{~ ^ = ★★ ☆}.sample)

@@ -86,7 +86,7 @@ def seed_forums
   forums = [
     {name: 'Events', display_order: 20},
     {name: 'Look What I Made', display_order: 30},
-    {name: 'Sex & Relationships', display_order: 40},
+    {name: 'Sex & Relationships', display_order: 40, is_visible_to_public: false},
     {name: 'Video Games', display_order: 50},
     {name: 'Tabletop Gaming', display_order: 60},
     {name: 'Cooking, Baking, Dining', display_order: 70},
@@ -102,6 +102,7 @@ def seed_forums
     {name: 'Suggest New Forum', display_order: 170},
     {name: 'Site Issues / Meta', display_order: 180},
     {name: 'Moderator Discussion', display_order: 999, is_visible_to_public: false, is_moderator_only: true},
+    {name: 'Inactive Forum', display_order: 999, is_active: false}
   ]
 
   forums.each { |f|
@@ -153,7 +154,9 @@ def create_member(hs_usernames, gender)
       new_member.username = hs_usernames.generate(:neutral)
     end
     new_member.email = new_member.username.gsub(/[^a-zA-Z0-9-]/,'') + '-' + rand(1..999999).to_s + '@halfsavage.com'
-  end while Member.find_by_username(new_member.username) || Member.find_by_email(new_member.email) || (new_member.username.length < 5) || (new_member.username.length > 30)
+  #end while Member.find_by_username(new_member.username) || Member.find_by_email(new_member.email) || (new_member.username.length < 5) || (new_member.username.length > 30)
+  end while (new_member.username.length < 5) || (new_member.username.length > 30)
+
 
   # For some members, give them a referring member
   if rand(0.0..1.0) <= CHANCE_OF_MEMBER_BEING_REFERRED then
@@ -163,7 +166,7 @@ def create_member(hs_usernames, gender)
   if !new_member.valid? then
     puts "\nMember can't be saved."
     puts new_member
-    debugger
+    #debugger
     new_member.errors.each{|attr,err| puts "  #{attr} : #{err}" }
   else
     new_member.save
@@ -404,18 +407,19 @@ puts ""
 puts '*** Seeding fake members ***'
 puts "Currently have #{Member.count} members; we'd like to have at least #{MINIMUM_MEMBERS_COUNT}."
 puts "Change MINIMUM_MEMBERS_COUNT in db/seeds.rb if you'd like a different value here."
-if (Member.count >= MINIMUM_MEMBERS_COUNT) then
+starting_member_count = Member.count 
+if (starting_member_count >= MINIMUM_MEMBERS_COUNT) then
   puts "Ok, we have plenty of fake members. Moving along."
 else
-  puts "Creating #{MINIMUM_MEMBERS_COUNT-Member.count} member(s) to get up to #{MINIMUM_MEMBERS_COUNT}"
+  puts "Creating #{MINIMUM_MEMBERS_COUNT-starting_member_count} member(s) to get up to #{MINIMUM_MEMBERS_COUNT}"
   male = Gender.find(1)
   female = Gender.find(2)
   complicated = Gender.find(3)
   hs_usernames = HalfSavageUserNames.new
-  1.upto(MINIMUM_MEMBERS_COUNT-Member.count) do |i|
-  hs_usernames = HalfSavageUserNames.new if i % 50 == 0
-  print " #{i}... " if i % 10 == 0
-    create_member hs_usernames, [male, male, male, female, female, female, complicated].sample
+  1.upto(MINIMUM_MEMBERS_COUNT-starting_member_count) do |i|
+    hs_usernames = HalfSavageUserNames.new if i % 50 == 0
+    print "#{i}... " if i % 10 == 0
+      create_member hs_usernames, [male, male, male, female, female, female, complicated].sample
   end
 end
 current_moderator_count = Member.moderators.count 
@@ -480,7 +484,7 @@ else
   
   (1..(MINIMUM_PRIVATE_MESSAGES_COUNT - current_message_count)).each { |i|
     print "#{i}... " if (i == 1) || (i % 10 == 0) 
-    hs_messages = HalfSavageMessages.new  if (i % 25 == 0)
+    hs_messages = HalfSavageMessages.new  if (i % 10 == 0)
     create_private_message(hs_messages, earliest_message_time, latest_message_time, (rand(4)==0))
   }
   puts " done creating fake messages"
