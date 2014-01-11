@@ -46,4 +46,20 @@ class Forum < ActiveRecord::Base
     # TODO: differentiate between paid and non-paid users
     return Forum.where("is_active=true and is_moderator_only!=true").order("display_order") 
   end
+
+  def self.default_forum() 
+    Forum.where('is_default=true and is_active=true').order('display_order').first
+  end 
+
+  def self.special_forums
+    {
+      :'most-active' => 'Most Active Topics',
+      :'all-topics' => 'All Topics', 
+      :'topics-you-created' => 'Topics You Created',
+      :'recently-viewed-topics' => 'Recently Viewed Topics',
+      :'newest-topics' => 'Newest Topics',
+      :'unanswered-questions' => 'Unanswered Questions',
+      :'topics-friends-are-active-in' => 'Topics Your Friends Are Active In'
+    }
+  end 
 end

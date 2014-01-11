@@ -84,6 +84,7 @@ def seed_forums
   puts "Seeding forums"
 
   forums = [
+    {name: 'General Bullshit', display_order: 10, is_default: true},
     {name: 'Events', display_order: 20},
     {name: 'Look What I Made', display_order: 30},
     {name: 'Sex & Relationships', display_order: 40, is_visible_to_public: false},

@@ -7,7 +7,7 @@ class Member < ActiveRecord::Base
          :recoverable, :rememberable, :trackable, :validatable
 
   # Filters
-  after_initialize :foo, on: [:create]
+  after_initialize :set_defaults, on: [:create]
 
   # Relations
   belongs_to :gender
@@ -37,7 +37,7 @@ class Member < ActiveRecord::Base
 
   protected
 
-  def foo
+  def set_defaults
     self.is_active = true if (self.is_active.nil?)
     self.is_moderator = false if (self.is_moderator.nil?)
     self.is_supermoderator = false if (self.is_supermoderator.nil?)
