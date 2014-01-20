@@ -1,0 +1,2 @@
+class FaggotController < ApplicationController
+end

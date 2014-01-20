@@ -1,8 +1,8 @@
 class Forum < ActiveRecord::Base
   validates :name, presence: true, uniqueness: true, length: {minimum: 5, maximum: 25}
   
-  has_many :forum_posts
-  has_many :posts, through: :forms_posts
+  has_many :forums_posts
+  has_many :posts, through: :forums_posts
 
   after_initialize :set_defaults, on: [:create]
   before_save :create_slug
@@ -49,6 +49,14 @@ class Forum < ActiveRecord::Base
 
   def self.default_forum() 
     Forum.where('is_default=true and is_active=true').order('display_order').first
+  end 
+
+  def self.find_by_slug(slug)
+    # See if it's a "special forum"
+    
+
+    # See if it's a "normal" forum
+    Forum.where('slug=?',slug)
   end 
 
   def self.special_forums

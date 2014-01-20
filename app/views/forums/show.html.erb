@@ -1,4 +1,25 @@
+
+<div id="forum-list">
+	<ul>
+	<% @special_forums.each_pair { |slug,name| %>
+		<li><a href="/forums/<%=slug%>"><%=name%></a></li>
+
+	<% } %>
+	</ul>
+	<ul>
+	<% @forums.each { |f| %>
+		<li><a href="/forums/<%=f.slug%>"><%=f.name%></a></li>
+	<% } %>
+	</ul>
+</div>
+
+<div id="threads">
+
+</div>
+
 <p id="notice"><%= notice %></p>
 
+<!--
 <%= link_to 'Edit', edit_forum_path(@forum) %> |
 <%= link_to 'Back', forums_path %>
+-->

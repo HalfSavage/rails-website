@@ -1,0 +1,2 @@
+module FaggotHelper
+end

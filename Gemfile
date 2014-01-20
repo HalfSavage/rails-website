@@ -41,6 +41,8 @@ gem 'irbtools', require: false, :group => :development
 # Suppresses all the noisy blabbering in the console when running local server for development
 gem 'quiet_assets', :group => :development
 
+gem 'will_paginate', '~> 3.0'
+
 # gem 'debugger'
 # gem 'font-awesome-less'
 

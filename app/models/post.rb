@@ -11,7 +11,7 @@ class Post < ActiveRecord::Base
 
   belongs_to :member
   has_many :forums_posts
-  has_many :forums, -> { uniq },  through: :forums_posts  # see for explanation of uniq: http://stackoverflow.com/questions/16569994/deprecation-warning-when-using-has-many-through-uniq-in-rails-4
+  has_many :forums, -> { uniq },  through: :forum_posts  # see for explanation of uniq: http://stackoverflow.com/questions/16569994/deprecation-warning-when-using-has-many-through-uniq-in-rails-4
   has_many :post_actions
 
   after_initialize :set_defaults, on: [:create]

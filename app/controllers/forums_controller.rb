@@ -10,15 +10,10 @@ class ForumsController < ApplicationController
 
   # GET /forums/1
   # GET /forums/1.json
-  def show
-    @special_forums = Forum.special_forums
-    @forums = Forum.all_for_member(current_member)
-
-    @active_forum = Forum.find_by_slug(params[:id])
-    if @active_forum then 
-      render inline: "This is fucking forum #{params[:id]}"
-    else 
-      render inline: "Never heard of that forum. Sorry."
+  def show  
+    if (@forum = Forum.find_by_slug(params[:id]))
+      @special_forums = Forum.special_forums
+      @forums = Forum.all_for_member(current_member)
     end
   end
 
