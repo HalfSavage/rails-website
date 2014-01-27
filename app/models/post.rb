@@ -5,15 +5,14 @@ class Post < ActiveRecord::Base
   belongs_to :parent, class_name: 'Post'
   has_many :replies, class_name: 'Post', foreign_key: 'parent_id'
   
-  # The thread is always the op
-  belongs_to :thread, class_name: 'Post'
-  has_many :thread_replies, class_name: 'Post', foreign_key: 'thread_id'
-
+  # belongs_to :thread, class_name: 'Post'
+  # has_many :thread_replies, class_name: 'Post', foreign_key: 'thread_id'
   belongs_to :member
   has_many :forums_posts
-  has_many :forums, -> { uniq },  through: :forum_posts  # see for explanation of uniq: http://stackoverflow.com/questions/16569994/deprecation-warning-when-using-has-many-through-uniq-in-rails-4
+  has_many :forums, -> { uniq },  through: :forums_posts  # see for explanation of uniq: http://stackoverflow.com/questions/16569994/deprecation-warning-when-using-has-many-through-uniq-in-rails-4
   has_many :post_actions
 
+  before_save :create_slug
   after_initialize :set_defaults, on: [:create]
 
   # TODO: Validate subject length BUT only if parent post (replies don't need subjects)
@@ -22,7 +21,14 @@ class Post < ActiveRecord::Base
   validates :member, presence: true
   # validates :parent, presence: true  # if post is an OP, it is its own parent
 
-  scope :threads, -> { where(parent_id: nil) }
+  scope :discussions, -> { where(parent_id: nil) }
+
+  def create_slug 
+    self.slug = subject.parameterize if (self.subject && self.slug.nil?)
+    while Post.where("slug=?",self.slug).any? do
+      self.slug += ('-' + rand(0..100).to_s)
+    end 
+  end 
 
   def set_defaults
     self.is_deleted = false if (self.is_deleted.nil?)

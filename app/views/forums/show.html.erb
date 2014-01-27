@@ -13,8 +13,21 @@
 	</ul>
 </div>
 
-<div id="threads">
+<div id="discussions">
+	<h2>Forum: <%=@forum.name%></h2>
+	<p>Most active tags: #one #two #three</p>
+	<%= will_paginate @discussions, renderer: BootstrapPagination::Rails %>
+	<% 
+		@discussions.each { |d| %>
+		<div class="discussion">
+		<h4><%=d.subject%>  <small><i class="fa fa-comment-o"></i> <%=d.reply_count%></small> </h4> 
+		<p>
+			<i>&ldquo;<%=truncate(d.body, length:120, separator:' ', omission: '...')%>&rdquo;</i><br>
+			<span class="text-muted">posted by <%=member_link(d.username)%> <%=time_ago_in_words(d.created_at)%> ago</span>
+		</p>
+		</div>
 
+	<% } %>
 </div>
 
 <p id="notice"><%= notice %></p>

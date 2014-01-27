@@ -4,6 +4,8 @@ class Forum < ActiveRecord::Base
   has_many :forums_posts
   has_many :posts, through: :forums_posts
 
+  has_many :discussions
+
   after_initialize :set_defaults, on: [:create]
   before_save :create_slug
 
@@ -57,6 +59,10 @@ class Forum < ActiveRecord::Base
 
     # See if it's a "normal" forum
     Forum.where('slug=?',slug)
+  end 
+
+  def threads
+
   end 
 
   def self.special_forums

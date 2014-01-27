@@ -26,7 +26,7 @@ MEMBER_MIN_AGE_YEARS = 18.0
 # No, it's not about the quality of your bedsheets.
 # If there are less than MINIMUM_THREAD_COUNT messages, 
 # create enough to get up to this total
-MINIMUM_THREAD_COUNT = 500
+MINIMUM_THREAD_COUNT = 2000
 
 # We call .sample on this array to figure out how many fake replies get attached 
 # to each fake thread. We use an array instead of a simple range because we want
@@ -441,7 +441,7 @@ end
 #####################
 
 puts "\n*** Seeding fake forum threads & replies ***"
-current_thread_count = Post.threads.count 
+current_thread_count = Post.discussions.count 
 puts "Currently have #{current_thread_count} threads; we'd like to have at least #{MINIMUM_THREAD_COUNT}."
 puts "Change MINIMUM_THREAD_COUNT in db/seeds.rb if you'd like a different value here."
 

@@ -11,9 +11,10 @@ class ForumsController < ApplicationController
   # GET /forums/1
   # GET /forums/1.json
   def show  
-    if (@forum = Forum.find_by_slug(params[:id]))
+    if (@forum = Forum.find_by_slug(params[:id]).first)
       @special_forums = Forum.special_forums
       @forums = Forum.all_for_member(current_member)
+      @discussions = @forum.discussions.page(params[:page])
     end
   end
 

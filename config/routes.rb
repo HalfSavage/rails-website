@@ -8,7 +8,7 @@ Halfsavage::Application.routes.draw do
   resources :events
   resources :messages
   resources :forums
-  resources :threads
+  resources :discussions
 
   get 'styles' => 'tests#styles'
 

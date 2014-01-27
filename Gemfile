@@ -42,6 +42,7 @@ gem 'irbtools', require: false, :group => :development
 gem 'quiet_assets', :group => :development
 
 gem 'will_paginate', '~> 3.0'
+gem 'will_paginate-bootstrap'
 
 # gem 'debugger'
 # gem 'font-awesome-less'
