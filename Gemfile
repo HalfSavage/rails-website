@@ -44,6 +44,8 @@ gem 'quiet_assets', :group => :development
 gem 'will_paginate', '~> 3.0'
 gem 'will_paginate-bootstrap'
 
+gem "composite_primary_keys", "~> 6.0.1"
+
 # gem 'debugger'
 # gem 'font-awesome-less'
 
