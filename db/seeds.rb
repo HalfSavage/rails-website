@@ -49,7 +49,33 @@ MARKOV_SENTENCES_TO_GENERATE = 500
 # If there are less private messages than this, create enough private messages to get to this total
 MINIMUM_PRIVATE_MESSAGES_COUNT = 500
 
-def markov_text(number_of_sentences, number_of_paragraphs, markov_sentences, max_length)
+# These hashtags get inserted the most often. Some other words inside post bodies will get randomly
+# turned into hashtags too
+STANDARD_HASHTAGS = %{asthma macs pcs art crafting writing herpes beer nerds miyazaki robots computers android iphone meat recipes healthy sad happy hero school college feels sextoys dragons dragoncon MAGfest ironmaiden icecream fatties-gotta-eat magic books curling nosepicking gardening nerds geeks sex fingerbanging wcw mlb NeildeGrassetyson steampunksucks nba nfl sony xbox titanfall quake mods  hockey flyers canadiens vaginas problems firstworld problems farts love broccoli cabbage pokemon exercise bootycon gorns tits poops nike reebok killlakill evangelion lordoftherings twerking football dogs cats}
+# 1.0 = all markov sentences will be followed by one of STANDARD_HASHTAGS
+# 0.0 = never  0.05 = a 1 in 20 chance
+CHANCE_OF_HASHTAG_AFTER_POST_SENTENCE = 0.05
+
+
+class String
+  @@junk_words = %w{the a an than then he she it is such up down as for in the a one some and but or few aboard about above across after against along amid among anti around as at before behind below beneath beside besides between beyond but by concerning considering despite down during except excepting excluding following for from in inside into like minus near of off on onto opposite outside over past per plus regarding round save since than through to toward towards under underneath unlike until up upon versus via with within without}
+
+  def junk_word?
+    return true if self.length <= 2
+    @@junk_words.any?{ |s| s.casecmp(self)==0 }
+  end 
+
+  def hashtagify!(chance_of_hashtagification = 0.1)
+    words = self.scan(/\b(\w+?)\b/)
+    words.each { |word|
+      #puts word[0]
+      self.sub!(word[0], '#' + word[0]) if ((rand < chance_of_hashtagification) && (!word[0].junk_word?))
+    }
+  end 
+end
+
+# Also inserts randomly-chosen hashtags
+def markov_text(number_of_sentences, number_of_paragraphs, markov_sentences, max_length, primary_hashtag_dictionary, secondary_hashtag_dictionary)
   body = ''
   (1..number_of_paragraphs.sample).each { |p|
     body += "\n\n" if p>1
@@ -60,7 +86,11 @@ def markov_text(number_of_sentences, number_of_paragraphs, markov_sentences, max
   while (body.length < 10)
     # kludge! not sure why it returns too little sometimes
     body << ' ' << markov_sentences.sample
+    body << ' #' << primary_hashtag_dictionary.sample << ' ' if rand < CHANCE_OF_HASHTAG_AFTER_POST_SENTENCE
   end
+
+  body.hashtagify!(0.02)
+
   body = [0..max_length-1] if body.length > max_length
   body
 end
@@ -80,9 +110,23 @@ def seed_genders
   Gender.create({id: 3, gender_description: "It's complicated", gender_abbreviation: ''}) if !Gender.find_by_id(3)
 end
 
-def seed_forums
-  puts "Seeding forums"
 
+FORUM_SPECIFIC_HASHTAGS = {
+  'Events' => %w{halfsavagecon sausagefest wrestlemania dragoncon MAGfest katsucon otakcon},
+  'Look What I Made' => %w{photoshop music video amatuerporn selfie},
+  'Sex & Relationships' => %w{sex blowjobs genitalwarts dumped single casualencounters},
+  'Video Games' => %w{Sony Microsoft Nintendo 3ds ps4 xbox Halo dukenukem titanfall assasinscreed graphicscards atari colecovision},
+  'Tabletop Gaming' => %w{warhammer catan d20 arkhamhorror eldritchhorror hexhex numenera pathfinder kingoftokyo carcassonne munchkin},
+  'Cooking, Baking, Dining' => %w{truffles paleo cupcakes cronuts potroast protein yummy},
+  'Deals' => %w{bogo rebate newegg slickdeals ebay woot},
+  'TV Series' => %w{homefront gameofthrones bigbangtheory killlalkill firefly doctorwho theitcrowd parksandrecreation},
+  'Movies' => %w{fakemovieone fakemovietwo adventuresoffartman starwars fakemovieblahblah},
+  'Half Savage Coders' => %w{csharp python ruby rails django functional haskell},
+  'Crafting' =>  %w{knitting painting drawing butter-sculptures}
+}
+
+def seed_forums
+  puts "Seeding forums..."
   forums = [
     {name: 'General Bullshit', display_order: 10, is_default: true},
     {name: 'Events', display_order: 20},
@@ -112,7 +156,7 @@ def seed_forums
 end
 
 def seed_message_types
-  puts "Seeding message types"
+  puts "Seeding message types..."
   MessageType.create({id: 1, name: 'Private Message'}) if !MessageType.find_by_id(1)
 end
 
@@ -154,10 +198,8 @@ def create_member(hs_usernames, gender)
     when 3
       new_member.username = hs_usernames.generate(:neutral)
     end
-    new_member.email = new_member.username.gsub(/[^a-zA-Z0-9-]/,'') + '-' + rand(1..999999).to_s + '@halfsavage.com'
-  #end while Member.find_by_username(new_member.username) || Member.find_by_email(new_member.email) || (new_member.username.length < 5) || (new_member.username.length > 30)
+    new_member.email = new_member.username.gsub(/[^a-zA-Z0-9-]/,'') + '-' + rand(1..999999).to_s + '@halfsavage.com'  
   end while (new_member.username.length < 5) || (new_member.username.length > 30)
-
 
   # For some members, give them a referring member
   if rand(0.0..1.0) <= CHANCE_OF_MEMBER_BEING_REFERRED then
@@ -187,7 +229,6 @@ def create_private_message(hs_messages, earliest_possible_message_time, latest_p
     new_message = Message.new(
       :post => post,
       :message_type => MessageType.find(1),
-
       :body => hs_messages.get_private_message_post_reply_body(1..5)
     )
     new_message.member_to = post.member
@@ -309,14 +350,8 @@ def get_markov_sentences
 end
 
 # Creates & saves a single forum thread, with replies
-def create_forum_thread(markov_sentences, prolific_members, moderators)
-
-  # Get the forums
-  public_forums = Forum.active_public
-  mod_forums = Forum.active_moderator
-
+def create_forum_thread(markov_sentences, prolific_members, moderators, public_forums, mod_forums)
   hs_subjects = HalfSavageSubjects.new
-
   post = Post.new({ body: '', subject: hs_subjects.random_subject })
 
   # Approx 50% of the posts will come from the group of "prolific members"
@@ -337,10 +372,14 @@ def create_forum_thread(markov_sentences, prolific_members, moderators)
     post.forums << public_forums.sample([1,1,1,1,1,1,1,1,2].sample)
   end
 
-  # TODO: chance of attaching a picture
-
-  # Create a number of sentenses and paragraphs
-  post.body = markov_text(SENTENCES_PER_FORUM_POST_PARAGRAPH, PARAGRAPHS_PER_FORUM_POST, markov_sentences, MAX_POST_LENGTH_CHARACTERS)
+  # Create a number of sentences and paragraphs
+  post.body = markov_text(SENTENCES_PER_FORUM_POST_PARAGRAPH, 
+    PARAGRAPHS_PER_FORUM_POST, 
+    markov_sentences, 
+    MAX_POST_LENGTH_CHARACTERS,
+    STANDARD_HASHTAGS,
+    FORUM_SPECIFIC_HASHTAGS[post.forums[0].name]
+    )
   post.save!
 
   # Generate replies to this thread
@@ -368,22 +407,21 @@ def create_forum_thread(markov_sentences, prolific_members, moderators)
       case rand(0..15)
       when 1
         reply.is_public_moderator_voice = true
-        #print 'M'
       when 2
         reply.is_private_moderator_voice = true
-        #print 'm'
-      else
-        #print '.'
       end
-    else
-      #print '.'
     end
-
-    # TODO: chance of attaching a picture
 
     # Create a number of paragraphs & sentences. Put a couple of line breaks in front if it's the first sentence in a paragraph
     reply.created_at = Time.at((Time.now.to_f - post.created_at.to_f)*rand + post.created_at.to_f)
-    reply.body = markov_text(SENTENCES_PER_FORUM_POST_PARAGRAPH, PARAGRAPHS_PER_FORUM_POST, markov_sentences, MAX_POST_LENGTH_CHARACTERS)
+    reply.body = markov_text(
+      SENTENCES_PER_FORUM_POST_PARAGRAPH, 
+      PARAGRAPHS_PER_FORUM_POST, 
+      markov_sentences, 
+      MAX_POST_LENGTH_CHARACTERS,
+      STANDARD_HASHTAGS,
+      FORUM_SPECIFIC_HASHTAGS[post.forums[0].name]
+      )
     reply.save!
     add_likes_to_post(reply) if rand(0..10) < 3
   }
@@ -455,9 +493,13 @@ else
   # We do this because in reality, most posts come from a small minority of members.
   prolific_members = Member.order("RANDOM()").take(Member.count / 10) + Member.moderators
 
+  # Get the forums
+  public_forums = Forum.active_public
+  mod_forums = Forum.active_moderator
+
   (1..(MINIMUM_THREAD_COUNT - current_thread_count)).each { |i|
     print "#{i}... " if i % 10 == 0
-    create_forum_thread(markov_sentences, prolific_members, Member.moderators)
+    create_forum_thread(markov_sentences, prolific_members, Member.moderators, public_forums, mod_forums)
   }
   puts " done creating threads and replies"
 end

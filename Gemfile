@@ -36,7 +36,18 @@ end
 
 # gem 'less-rails' #Sprockets (what Rails 3.1 uses for its asset pipeline) supports LESS
 
-gem 'irbtools', require: false, :group => :development
+gem 'rails-console-tweaks'
+
+# any gems in this group are only available
+# within the rails console
+group :console do
+  gem 'wirb'
+  gem 'hirb'
+  gem 'awesome_print'
+end
+
+
+#gem 'irbtools', require: false, :group => :development
 
 # Suppresses all the noisy blabbering in the console when running local server for development
 gem 'quiet_assets', :group => :development
