@@ -26,7 +26,7 @@ MEMBER_MIN_AGE_YEARS = 18.0
 # No, it's not about the quality of your bedsheets.
 # If there are less than MINIMUM_THREAD_COUNT messages, 
 # create enough to get up to this total
-MINIMUM_THREAD_COUNT = 2000
+MINIMUM_THREAD_COUNT = 2010
 
 # We call .sample on this array to figure out how many fake replies get attached 
 # to each fake thread. We use an array instead of a simple range because we want

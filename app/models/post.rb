@@ -38,8 +38,7 @@ class Post < ActiveRecord::Base
     # Just delete all existing tags. This is inefficient obviously... eventually we'll want 
     # to just delete the tags that are no longer in the post. But this only happens once,
     # when a post is saved, so whatever.
-    PostsTag.delete_all(post_id: id)
-    log = ''
+    PostTag.delete_all(post_id: id)
 
     # Pull all the hashtags out into array via regex
     tags = body.scan(/(?:(?<=\s)|^)#(\w*[A-Za-z_]+\w*)/)
@@ -61,7 +60,7 @@ class Post < ActiveRecord::Base
         tag = Tag.find_by_tag_or_new(tag_text)
         tag.created_at = self.created_at
         tag.save
-        post_tag = PostsTag.new({tag: tag, post: self})
+        post_tag = PostTag.new({tag: tag, post: self})
         begin 
           post_tag.save
         rescue Exception=>e 
