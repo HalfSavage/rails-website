@@ -11,10 +11,11 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20140209154433) do
+ActiveRecord::Schema.define(version: 20140216181631) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+  enable_extension "pg_stat_statements"
 
   create_table "forum_moderators", force: true do |t|
     t.string   "forum_moderators"
@@ -133,6 +134,13 @@ ActiveRecord::Schema.define(version: 20140209154433) do
 
   add_index "post_actions", ["post_id", "post_action_type_id", "created_at"], name: "post_actions_post_id_etc", using: :btree
 
+  create_table "post_tags", id: false, force: true do |t|
+    t.integer  "post_id",    null: false
+    t.integer  "tag_id",     null: false
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
   create_table "posts", force: true do |t|
     t.integer  "member_id"
     t.integer  "parent_id"
@@ -151,19 +159,10 @@ ActiveRecord::Schema.define(version: 20140209154433) do
   add_index "posts", ["parent_id", "created_at", "member_id"], name: "ix_posts_for_threads", order: {"created_at"=>:desc}, using: :btree
   add_index "posts", ["slug"], name: "index_posts_on_slug", unique: true, using: :btree
 
-  create_table "posts_tags", id: false, force: true do |t|
-    t.integer  "post_id",    null: false
-    t.integer  "tag_id",     null: false
-    t.datetime "created_at"
-    t.datetime "updated_at"
-  end
-
   create_table "tags", force: true do |t|
     t.string   "tag_text"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
-
-  add_index "tags", ["tag_text"], name: "index_tags_on_tag_text", unique: true, using: :btree
 
 end

@@ -2,7 +2,7 @@
 # See: https://github.com/composite-primary-keys/composite_primary_keys
 # Can use composite find() like Post_Tag.find(123,456)
 
-class PostsTag < ActiveRecord::Base
+class PostTag < ActiveRecord::Base
   belongs_to :tag 
   belongs_to :post 
   

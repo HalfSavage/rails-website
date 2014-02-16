@@ -25,7 +25,6 @@ module Halfsavage
     config.i18n.default_locale = :en
     config.secret_key_base = 'fartbanger' # this should probably be something besides 'fartbanger'
 
-
     # allow devise to login via either username or email
     # also need to override find_for_authentication in member.rb
     # and also need to change calls to devise_parameter_sanitizer in member.rb
