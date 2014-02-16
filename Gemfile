@@ -46,8 +46,8 @@ group :console do
   gem 'awesome_print'
 end
 
-
-#gem 'irbtools', require: false, :group => :development
+# Adds view support and advanced index support to migrations and schema dumps
+gem "schema_plus"
 
 # Suppresses all the noisy blabbering in the console when running local server for development
 gem 'quiet_assets', :group => :development
