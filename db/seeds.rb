@@ -26,7 +26,7 @@ MEMBER_MIN_AGE_YEARS = 18.0
 # No, it's not about the quality of your bedsheets.
 # If there are less than MINIMUM_THREAD_COUNT messages, 
 # create enough to get up to this total
-MINIMUM_THREAD_COUNT = 2010
+MINIMUM_THREAD_COUNT = 2500
 
 # We call .sample on this array to figure out how many fake replies get attached 
 # to each fake thread. We use an array instead of a simple range because we want
@@ -51,14 +51,14 @@ MINIMUM_PRIVATE_MESSAGES_COUNT = 500
 
 # These hashtags get inserted the most often. Some other words inside post bodies will get randomly
 # turned into hashtags too
-STANDARD_HASHTAGS = %{asthma macs pcs art crafting writing herpes beer nerds miyazaki robots computers android iphone meat recipes healthy sad happy hero school college feels sextoys dragons dragoncon MAGfest ironmaiden icecream fatties-gotta-eat magic books curling nosepicking gardening nerds geeks sex fingerbanging wcw mlb NeildeGrassetyson steampunksucks nba nfl sony xbox titanfall quake mods  hockey flyers canadiens vaginas problems firstworld problems farts love broccoli cabbage pokemon exercise bootycon gorns tits poops nike reebok killlakill evangelion lordoftherings twerking football dogs cats}
+STANDARD_HASHTAGS = %w{asthma macs pcs art crafting writing herpes beer nerds miyazaki robots computers android iphone meat recipes healthy sad happy hero school college feels sextoys dragons dragoncon MAGfest ironmaiden icecream fatties-gotta-eat magic books curling nosepicking gardening nerds geeks sex fingerbanging wcw mlb NeildeGrassetyson steampunksucks nba nfl sony xbox titanfall quake mods  hockey flyers canadiens vaginas problems firstworld problems farts love broccoli cabbage pokemon exercise bootycon gorns tits poops nike reebok killlakill evangelion lordoftherings twerking football dogs cats}
 # 1.0 = all markov sentences will be followed by one of STANDARD_HASHTAGS
 # 0.0 = never  0.05 = a 1 in 20 chance
-CHANCE_OF_HASHTAG_AFTER_POST_SENTENCE = 0.05
+CHANCE_OF_HASHTAG_AFTER_POST_SENTENCE = 0.1
 
 
 class String
-  @@junk_words = %w{the a an than then he she it is such up down as for in the a one some and but or few aboard about above across after against along amid among anti around as at before behind below beneath beside besides between beyond but by concerning considering despite down during except excepting excluding following for from in inside into like minus near of off on onto opposite outside over past per plus regarding round save since than through to toward towards under underneath unlike until up upon versus via with within without}
+  @@junk_words = %w{while really going means posts could would were his out got can them stop even vol yes no all get these our her because are not need close much has that was just you who young their well you was your this other the a an than then he she it is such up down as for in the a one some and but or few aboard about above across after against along amid among anti around as at before behind below beneath beside besides between beyond but by concerning considering despite down during except excepting excluding following for from in inside into like minus near of off on onto opposite outside over past per plus regarding round save since than through to toward towards under underneath unlike until up upon versus via with within without}
 
   def junk_word?
     return true if self.length <= 2
@@ -69,7 +69,7 @@ class String
     words = self.scan(/\b(\w+?)\b/)
     words.each { |word|
       #puts word[0]
-      self.sub!(word[0], '#' + word[0]) if ((rand < chance_of_hashtagification) && (!word[0].junk_word?))
+      self.sub!(word[0], '#' + word[0]) if ((word[0].length >= 5) && (rand < chance_of_hashtagification) && (!word[0].junk_word?))
     }
   end 
 end
@@ -77,16 +77,20 @@ end
 # Also inserts randomly-chosen hashtags
 def markov_text(number_of_sentences, number_of_paragraphs, markov_sentences, max_length, primary_hashtag_dictionary, secondary_hashtag_dictionary)
   body = ''
+  applicable_hashtags = primary_hashtag_dictionary + ((secondary_hashtag_dictionary || []) * 10)
+
   (1..number_of_paragraphs.sample).each { |p|
     body += "\n\n" if p>1
     (1..number_of_sentences.sample).each { |s|
       body << markov_sentences.sample
+      body << ' #' << applicable_hashtags.sample << ' ' if rand < CHANCE_OF_HASHTAG_AFTER_POST_SENTENCE
     }
   }
+
   while (body.length < 10)
     # kludge! not sure why it returns too little sometimes
     body << ' ' << markov_sentences.sample
-    body << ' #' << primary_hashtag_dictionary.sample << ' ' if rand < CHANCE_OF_HASHTAG_AFTER_POST_SENTENCE
+    body << ' #' << applicable_hashtags.sample << ' ' if rand < CHANCE_OF_HASHTAG_AFTER_POST_SENTENCE
   end
 
   body.hashtagify!(0.02)
@@ -109,7 +113,6 @@ def seed_genders
   Gender.create({id: 2, gender_description: 'Female', gender_abbreviation: 'F'}) if !Gender.find_by_id(2)
   Gender.create({id: 3, gender_description: "It's complicated", gender_abbreviation: ''}) if !Gender.find_by_id(3)
 end
-
 
 FORUM_SPECIFIC_HASHTAGS = {
   'Events' => %w{halfsavagecon sausagefest wrestlemania dragoncon MAGfest katsucon otakcon},
