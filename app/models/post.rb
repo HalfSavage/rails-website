@@ -60,7 +60,7 @@ class Post < ActiveRecord::Base
         tag = Tag.find_by_tag_or_new(tag_text)
         tag.created_at = self.created_at
         tag.save
-        post_tag = PostTag.new({tag: tag, post: self})
+        post_tag = PostTag.new({tag: tag, post: self, created_at: self.created_at})
         begin 
           post_tag.save
         rescue Exception=>e 
