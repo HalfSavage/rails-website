@@ -15,7 +15,18 @@
 
 <div id="discussions">
 	<h2>Forum: <%=@forum.name%></h2>
-	<p>Most active tags: #one #two #three</p>
+	<%
+	trending_tags = @forum.tag_trending_by_forums
+	if trending_tags.count > 0
+		%>
+		<p>
+			Trending:
+			<% trending_tags.each do |tag| %>
+				<a href="/tags/<%=tag.tag_text%>">#<%=tag.tag_text%></a> 
+
+			<% end %>
+		</p>
+	<% end %>
 	<%= will_paginate @discussions, renderer: BootstrapPagination::Rails %>
 	<% 
 		@discussions.each { |d| %>
