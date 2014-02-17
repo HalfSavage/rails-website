@@ -42,9 +42,10 @@ gem 'rails-console-tweaks'
 # within the rails console
 group :console do
   gem 'wirb'
-  gem 'hirb'
+  gem 'hirb-unicode'
   gem 'awesome_print'
 end
+
 
 # Adds view support and advanced index support to migrations and schema dumps
 gem "schema_plus"
