@@ -3,7 +3,7 @@ class Forum < ActiveRecord::Base
   
   has_many :forums_posts
   has_many :posts, through: :forums_posts
-
+  has_many :tag_trending_by_forums
   has_many :discussions
 
   after_initialize :set_defaults, on: [:create]
