@@ -7,26 +7,30 @@
 	<% } %>
 	</ul>
 	<ul>
-	<% @forums.each { |f| %>
+	<% cache("forums", :expires_in => 1.hour) do
+		@forums.each do |f| %>
 		<li><a href="/forums/<%=f.slug%>"><%=f.name%></a></li>
-	<% } %>
+		<% end  
+	end %>
 	</ul>
 </div>
 
 <div id="discussions">
 	<h2>Forum: <%=@forum.name%></h2>
 	<%
-	trending_tags = @forum.tag_trending_by_forums
-	if trending_tags.count > 0
-		%>
-		<p>
-			Trending:
-			<% trending_tags.each do |tag| %>
-				<a href="/tags/<%=tag.tag_text%>">#<%=tag.tag_text%></a> 
+	cache(@forum, :expires_in => 10.minutes) do
+		trending_tags = @forum.tag_trending_by_forums
+		if trending_tags.count > 0
+			%>
+			<p>
+				Trending:
+				<% trending_tags.each do |tag| %>
+					<a href="/tags/<%=tag.tag_text%>">#<%=tag.tag_text%></a> 
 
-			<% end %>
-		</p>
-	<% end %>
+				<% end %>
+			</p>
+		<% end
+	end %>
 	<%= will_paginate @discussions, renderer: BootstrapPagination::Rails %>
 	<% 
 		@discussions.each { |d| %>
