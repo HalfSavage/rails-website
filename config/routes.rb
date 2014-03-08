@@ -1,4 +1,6 @@
 Halfsavage::Application.routes.draw do
+  resources :addresses
+
   devise_for :members
   get "welcome/index"
   root "welcome#index"
