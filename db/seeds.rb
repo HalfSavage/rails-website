@@ -1,6 +1,7 @@
-require_relative 'usernames-seeding'
-require_relative 'subjects-seeding'
-require_relative 'messages-seeding'
+require_relative 'seed_helpers/usernames'
+require_relative 'seed_helpers/subjects'
+require_relative 'seed_helpers/messages'
+require_relative 'seed_helpers/weighted_seed_city_generator'
 
 # If there are less members than this, add enough members to get to this total
 MINIMUM_MEMBERS_COUNT = 600
@@ -212,11 +213,24 @@ def create_member(hs_usernames, gender)
   if !new_member.valid? then
     puts "\nMember can't be saved."
     puts new_member
-    #debugger
     new_member.errors.each{|attr,err| puts "  #{attr} : #{err}" }
   else
     new_member.save
   end
+
+  if rand < 0.8 then 
+    city = WeightedSeedCityGenerator.get_weighted_random_city
+    Address.create!(
+      city: city.name,
+      country: city.country,
+      region: city.region,
+      latitude: city.latitude,
+      longitude: city.longitude,
+      member: new_member
+    )
+  end 
+
+
   new_member
 end
 
@@ -453,6 +467,8 @@ starting_member_count = Member.count
 if (starting_member_count >= MINIMUM_MEMBERS_COUNT) then
   puts "Ok, we have plenty of fake members. Moving along."
 else
+  #debugger
+  WeightedSeedCityGenerator.load_cities('db/seed_helpers/cities-with-population-us.txt')
   puts "Creating #{MINIMUM_MEMBERS_COUNT-starting_member_count} member(s) to get up to #{MINIMUM_MEMBERS_COUNT}"
   male = Gender.find(1)
   female = Gender.find(2)
