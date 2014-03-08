@@ -3,7 +3,7 @@ source 'https://rubygems.org'
 gem 'devise', '>= 3.2.0'
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
-gem 'rails', '4.0.2'
+gem 'rails', '4.0.3'
 
 # Use postgresql as the database for Active Record
 gem 'pg'
@@ -40,12 +40,7 @@ gem 'rails-console-tweaks'
 
 # any gems in this group are only available
 # within the rails console
-group :console do
-  gem 'wirb'
-  gem 'hirb-unicode'
-  gem 'awesome_print'
-end
-
+gem 'irbtools', require: true, group: :development
 
 # Adds view support and advanced index support to migrations and schema dumps
 gem "schema_plus"
