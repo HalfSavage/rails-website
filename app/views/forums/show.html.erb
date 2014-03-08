@@ -13,24 +13,35 @@
 		<% end  
 	end %>
 	</ul>
+	<ul>
+	<% cache("tags_trending_global", :expires_in => 10.minutes) do 
+		Tag.trending.take(7).each do |tt| %>
+		<li><a href="/tags/<%=tt.tag_text%>">#<%=tt.tag_text%></a></li>
+		<% end 
+	end %>
+	</ul>
+
+
 </div>
 
 <div id="discussions">
 	<h2>Forum: <%=@forum.name%></h2>
 	<%
 	cache(@forum, :expires_in => 10.minutes) do
-		trending_tags = @forum.tag_trending_by_forums
+		trending_tags = @forum.trending_tags
 		if trending_tags.count > 0
 			%>
 			<p>
 				Trending:
 				<% trending_tags.each do |tag| %>
-					<a href="/tags/<%=tag.tag_text%>">#<%=tag.tag_text%></a> 
+					<a href="/forums/@forum.id/tags/<%=tag.tag_text%>">#<%=tag.tag_text%></a> 
 
 				<% end %>
 			</p>
 		<% end
-	end %>
+	end 
+debugger
+	%>
 	<%= will_paginate @discussions, renderer: BootstrapPagination::Rails %>
 	<% 
 		@discussions.each { |d| %>
