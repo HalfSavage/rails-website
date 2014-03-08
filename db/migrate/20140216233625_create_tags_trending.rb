@@ -1,7 +1,7 @@
 class CreateTagsTrending < ActiveRecord::Migration
   def self.up
     execute <<-SQL
-       create or replace view tags_trending as
+       create or replace view tags_trending_by_forum as
        SELECT pt.tag_id,
           t.tag_text,
           count(pt.tag_id) AS count,
@@ -27,7 +27,7 @@ class CreateTagsTrending < ActiveRecord::Migration
 
   def self.down 
     execute <<-SQL
-      drop view tags_trending;
+      drop view tags_trending_by_forum;
     SQL
   end 
 end
