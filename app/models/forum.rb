@@ -3,7 +3,7 @@ class Forum < ActiveRecord::Base
   
   has_many :forums_posts
   has_many :posts, through: :forums_posts
-  has_many :tag_trending_by_forums
+  #has_many :tag_trending_by_forums
   has_many :discussions
 
   after_initialize :set_defaults, on: [:create]
@@ -21,6 +21,10 @@ class Forum < ActiveRecord::Base
     self.is_moderator_only = false if (self.is_moderator_only.nil?)
     self.is_visible_to_public = true if (self.is_visible_to_public.nil?)
     self.is_paid_member_only = true if (self.is_paid_member_only.nil?)
+  end 
+
+  def trending_tags
+    Tag.trending_in_forum(id)
   end 
 
   # Returns a single forum by slug. 
@@ -56,7 +60,6 @@ class Forum < ActiveRecord::Base
   def self.find_by_slug(slug)
     # See if it's a "special forum"
     
-
     # See if it's a "normal" forum
     Forum.where('slug=?',slug)
   end 
