@@ -11,30 +11,11 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20140217031504) do
+ActiveRecord::Schema.define(version: 20140305052056) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "pg_stat_statements"
-
-  create_table "forums", force: true do |t|
-    t.string   "name"
-    t.boolean  "is_active"
-    t.boolean  "is_moderator_only"
-    t.boolean  "is_visible_to_public"
-    t.boolean  "is_paid_member_only"
-    t.datetime "created_at"
-    t.datetime "updated_at"
-    t.integer  "display_order"
-    t.string   "slug"
-    t.boolean  "is_default"
-  end
-
-  create_table "forums_posts", force: true do |t|
-    t.integer "forum_id", null: false
-    t.integer "post_id",  null: false
-    t.index ["forum_id", "post_id"], :name => "by_forum_and_post", :unique => true
-  end
 
   create_table "members", force: true do |t|
     t.string   "username"
@@ -67,6 +48,41 @@ ActiveRecord::Schema.define(version: 20140217031504) do
     t.index ["username"], :name => "index_members_on_username", :unique => true
   end
 
+  create_table "addresses", force: true do |t|
+    t.string   "address_1"
+    t.string   "address_2"
+    t.string   "city"
+    t.string   "region"
+    t.string   "country",    limit: 2
+    t.float    "latitude"
+    t.float    "longitude"
+    t.integer  "member_id"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+    t.index ["member_id"], :name => "fk__addresses_member_id"
+    t.index ["member_id"], :name => "index_addresses_on_member_id"
+    t.foreign_key ["member_id"], "members", ["id"], :on_update => :no_action, :on_delete => :no_action, :name => "fk_addresses_member_id"
+  end
+
+  create_table "forums", force: true do |t|
+    t.string   "name"
+    t.boolean  "is_active"
+    t.boolean  "is_moderator_only"
+    t.boolean  "is_visible_to_public"
+    t.boolean  "is_paid_member_only"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+    t.integer  "display_order"
+    t.string   "slug"
+    t.boolean  "is_default"
+  end
+
+  create_table "forums_posts", force: true do |t|
+    t.integer "forum_id", null: false
+    t.integer "post_id",  null: false
+    t.index ["forum_id", "post_id"], :name => "by_forum_and_post", :unique => true
+  end
+
   create_table "posts", force: true do |t|
     t.integer  "member_id"
     t.integer  "parent_id"
@@ -80,11 +96,13 @@ ActiveRecord::Schema.define(version: 20140217031504) do
     t.string   "subject"
     t.integer  "thread_id"
     t.string   "slug"
-    t.index ["parent_id", "created_at", "member_id"], :name => "ix_posts_for_threads", :order => {"parent_id" => :asc, "created_at" => :desc, "member_id" => :asc}
+    t.index ["parent_id", "created_at", "is_deleted", "member_id"], :name => "ix_posts_last_replies", :order => {"parent_id" => :asc, "created_at" => :desc, "is_deleted" => :asc, "member_id" => :asc}
+    t.index ["parent_id", "is_deleted", "member_id", "created_at", "updated_at", "subject", "id"], :name => "ix_posts_discussions", :order => {"parent_id" => :asc, "is_deleted" => :asc, "member_id" => :asc, "created_at" => :desc, "updated_at" => :asc, "subject" => :asc, "id" => :asc}
     t.index ["slug"], :name => "index_posts_on_slug", :unique => true
   end
 
-  create_view "discussions", " SELECT f.name, \n    fp.forum_id, \n    p.id, \n    p.member_id, \n    p.body, \n    p.subject, \n    p.created_at, \n    p.updated_at, \n    m.username, \n    ( SELECT count(1) AS count\n           FROM posts preply\n          WHERE ((preply.parent_id = p.id) AND (preply.is_deleted = false))) AS reply_count, \n    plastreply.reply_created_at, \n    plastreply.reply_username\n   FROM ((((posts p\n   JOIN forums_posts fp ON ((p.id = fp.post_id)))\n   JOIN forums f ON ((fp.forum_id = f.id)))\n   JOIN members m ON ((p.member_id = m.id)))\n   LEFT JOIN ( SELECT rank() OVER (PARTITION BY p_1.parent_id ORDER BY p_1.created_at DESC) AS reply_number, \n    p_1.parent_id, \n    p_1.created_at AS reply_created_at, \n    m_1.username AS reply_username, \n    m_1.id AS reply_member_id\n   FROM (posts p_1\n   JOIN members m_1 ON ((p_1.member_id = m_1.id)))\n  WHERE ((p_1.parent_id IS NOT NULL) AND (p_1.is_deleted IS NOT NULL))) plastreply ON (((p.id = plastreply.parent_id) AND (plastreply.reply_number = 1))))\n  WHERE ((p.parent_id IS NULL) AND (p.is_deleted = false))\n  ORDER BY COALESCE(plastreply.reply_created_at, p.created_at) DESC", :force => true
+  create_view "posts_last_replies_with_usernames", " SELECT p_last_replies.reply_number, \n    p_last_replies.parent_id, \n    p_last_replies.created_at, \n    p_last_replies.member_id, \n    m.username\n   FROM (( SELECT row_number() OVER (PARTITION BY p.parent_id ORDER BY p.created_at DESC) AS reply_number, \n            p.parent_id, \n            p.created_at, \n            p.member_id\n           FROM posts p\n          WHERE ((p.parent_id IS NOT NULL) AND (p.is_deleted = false))) p_last_replies\n   JOIN members m ON ((p_last_replies.member_id = m.id)))\n  WHERE (p_last_replies.reply_number = 1)", :force => true
+  create_view "discussions", " SELECT f.name, \n    fp.forum_id, \n    p.id, \n    p.member_id, \n    p.body, \n    p.subject, \n    p.created_at, \n    p.updated_at, \n    m.username, \n    ( SELECT count(1) AS count\n           FROM posts preply\n          WHERE ((preply.parent_id = p.id) AND (preply.is_deleted = false))) AS reply_count, \n    plr.created_at AS reply_created_at, \n    plr.username AS reply_username\n   FROM ((((posts p\n   JOIN forums_posts fp ON ((p.id = fp.post_id)))\n   JOIN forums f ON ((fp.forum_id = f.id)))\n   JOIN members m ON ((p.member_id = m.id)))\n   LEFT JOIN posts_last_replies_with_usernames plr ON ((p.id = plr.parent_id)))\n  WHERE ((p.parent_id IS NULL) AND (p.is_deleted = false))\n  ORDER BY COALESCE(plr.created_at, p.created_at) DESC", :force => true
   create_table "forum_moderators", force: true do |t|
     t.string   "forum_moderators"
     t.integer  "forum_id"
@@ -148,6 +166,7 @@ ActiveRecord::Schema.define(version: 20140217031504) do
     t.index ["post_id", "post_action_type_id", "created_at"], :name => "post_actions_post_id_etc"
   end
 
+  create_view "post_last_replies", " SELECT p_last_replies.reply_number, \n    p_last_replies.parent_id, \n    p_last_replies.created_at, \n    p_last_replies.member_id, \n    m.username\n   FROM (( SELECT row_number() OVER (PARTITION BY p.parent_id ORDER BY p.created_at DESC) AS reply_number, \n            p.parent_id, \n            p.created_at, \n            p.member_id\n           FROM posts p\n          WHERE ((p.parent_id IS NOT NULL) AND (p.is_deleted = false))) p_last_replies\n   JOIN members m ON ((p_last_replies.member_id = m.id)))\n  WHERE (p_last_replies.reply_number = 1)\n  ORDER BY p_last_replies.parent_id", :force => true
   create_table "post_tags", id: false, force: true do |t|
     t.integer  "post_id",    null: false
     t.integer  "tag_id",     null: false
@@ -155,11 +174,13 @@ ActiveRecord::Schema.define(version: 20140217031504) do
     t.datetime "updated_at"
   end
 
+  create_view "posts_last_replies", " SELECT p_last_replies.reply_number, \n    p_last_replies.parent_id, \n    p_last_replies.created_at, \n    p_last_replies.member_id\n   FROM ( SELECT row_number() OVER (PARTITION BY p.parent_id ORDER BY p.created_at DESC) AS reply_number, \n            p.parent_id, \n            p.created_at, \n            p.member_id\n           FROM posts p\n          WHERE ((p.parent_id IS NOT NULL) AND (p.is_deleted = false))) p_last_replies\n  WHERE (p_last_replies.reply_number = 1)", :force => true
   create_table "tags", force: true do |t|
     t.string   "tag_text"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
 
+  create_view "tags_trending", " SELECT pt.tag_id, \n    t.tag_text, \n    count(pt.tag_id) AS count, \n    sum(\n        CASE\n            WHEN ((date_part('epoch'::text, now()) - date_part('epoch'::text, pt.created_at)) < (7200)::double precision) THEN (100.0)::double precision\n            ELSE ((1)::double precision + ((100.0)::double precision / ((date_part('epoch'::text, now()) - date_part('epoch'::text, pt.created_at)) / (7200.0)::double precision)))\n        END) AS score\n   FROM ((post_tags pt\n   JOIN forums_posts fp ON ((pt.post_id = fp.post_id)))\n   JOIN tags t ON ((pt.tag_id = t.id)))\n  GROUP BY pt.tag_id, t.tag_text\n  ORDER BY sum(\nCASE\n    WHEN ((date_part('epoch'::text, now()) - date_part('epoch'::text, pt.created_at)) < (7200)::double precision) THEN (100.0)::double precision\n    ELSE ((1)::double precision + ((100.0)::double precision / ((date_part('epoch'::text, now()) - date_part('epoch'::text, pt.created_at)) / (7200.0)::double precision)))\nEND) DESC\n LIMIT 100", :force => true
   create_view "tags_trending_by_forum", " SELECT pt.tag_id, \n    t.tag_text, \n    count(pt.tag_id) AS count, \n    fp.forum_id, \n    sum(\n        CASE\n            WHEN ((date_part('epoch'::text, now()) - date_part('epoch'::text, pt.created_at)) < (7200)::double precision) THEN (100.0)::double precision\n            ELSE ((1)::double precision + ((100.0)::double precision / ((date_part('epoch'::text, now()) - date_part('epoch'::text, pt.created_at)) / (7200.0)::double precision)))\n        END) AS score\n   FROM ((post_tags pt\n   JOIN forums_posts fp ON ((pt.post_id = fp.post_id)))\n   JOIN tags t ON ((pt.tag_id = t.id)))\n  GROUP BY fp.forum_id, pt.tag_id, t.tag_text\n  ORDER BY sum(\nCASE\n    WHEN ((date_part('epoch'::text, now()) - date_part('epoch'::text, pt.created_at)) < (7200)::double precision) THEN (100.0)::double precision\n    ELSE ((1)::double precision + ((100.0)::double precision / ((date_part('epoch'::text, now()) - date_part('epoch'::text, pt.created_at)) / (7200.0)::double precision)))\nEND) DESC\n LIMIT 100", :force => true
 end
