@@ -2,38 +2,42 @@ require_relative 'seed_helpers/usernames'
 require_relative 'seed_helpers/subjects'
 require_relative 'seed_helpers/messages'
 require_relative 'seed_helpers/weighted_seed_city_generator'
+require_relative 'seed_helpers/seed_member_generator'
+
+# If this is false, we won't create any fake data
+CREATE_FAKE_DATA = true
 
 # If there are less members than this, add enough members to get to this total
-MINIMUM_MEMBERS_COUNT = 600
+FAKE_MINIMUM_MEMBERS_COUNT = 600
 
 # When we create a new fake member, their created_at will be set to 
-# between 1 and MAX_MEMBER_ACCOUNT_AGE_DAYS. (So it doesn't look like 158795 members)
+# between 1 and FAKE_MAX_MEMBER_ACCOUNT_AGE_DAYS. (So it doesn't look like 158795 members)
 # joined on the same goddamn day
 # N.B. - this is the age of their ACCOUNT, not their age as human beings
-MAX_MEMBER_ACCOUNT_AGE_DAYS = 700
+FAKE_MAX_MEMBER_ACCOUNT_AGE_DAYS = 700
 
 # Some of the members will have a randomly-chosen member as their referrer
 # 1.0 = 100% chance of trying to populate the member_id_referred field
 # 0.0 = 0% chance of trying to populate the member_id_referred field
-CHANCE_OF_MEMBER_BEING_REFERRED = 0.25
+FAKE_CHANCE_OF_MEMBER_BEING_REFERRED = 0.25
 
 # If less than this many mods exist, we'll make this many members mods.
-MINIMUM_MOD_COUNT = 25
+FAKE_MINIMUM_MOD_COUNT = 25
 
-# The random members we create will have an age between MEMBER_MAX_AGE_YEARS and MEMBER_MIN_AGE_YEARS
-MEMBER_MAX_AGE_YEARS = 45.0
-MEMBER_MIN_AGE_YEARS = 18.0
+# The random members we create will have an age between FAKE_MEMBER_MAX_AGE_YEARS and FAKE_MEMBER_MIN_AGE_YEARS
+FAKE_MEMBER_MAX_AGE_YEARS = 45.0
+FAKE_MEMBER_MIN_AGE_YEARS = 18.0
  
 # No, it's not about the quality of your bedsheets.
-# If there are less than MINIMUM_THREAD_COUNT messages, 
+# If there are less than FAKE_MINIMUM_THREAD_COUNT messages, 
 # create enough to get up to this total
-MINIMUM_THREAD_COUNT = 2500
+FAKE_MINIMUM_THREAD_COUNT = 2500
 
 # We call .sample on this array to figure out how many fake replies get attached 
 # to each fake thread. We use an array instead of a simple range because we want
 # to heavily weight things towards *few* replies... most threads have only a few 
 # replies; only a tiny number of threads will have a true shit load of replies.
-REPLIES_PER_THREAD = [0,0,0,0,0,0,1,1,1,2,2,2,2,2,2,3,3,3,4,4,5,5,6,7,8,9,10,11,12,13,14,20,40,60,80]
+FAKE_REPLIES_PER_THREAD = [0,0,0,0,0,0,1,1,1,2,2,2,2,2,2,3,3,3,4,4,5,5,6,7,8,9,10,11,12,13,14,20,40,60,80]
 
 # Max number of paragraphs, and max number of sentences gener each forum post
 # We specify an array instead of a simple range so we can do weighting
@@ -171,67 +175,13 @@ def add_likes_to_post(post)
     like = Like.new(
       post: post,
       member: Member.order("RANDOM()").first,
-      created_at: Time.at((Time.now.to_f - post.created_at.to_f)*rand + post.created_at.to_f)
+      created_at: rand(post.created_at..Time.now)
     )
     begin
       like.save
     rescue
     end
   end
-end
-
-####################
-# Populate members #
-####################
-
-def create_member(hs_usernames, gender)
-  new_member = Member.new(
-    :gender => gender,
-    :password => 'password',
-    :date_of_birth => Time.now - (60*60*24*365)*rand(MEMBER_MIN_AGE_YEARS..MEMBER_MAX_AGE_YEARS),
-    :created_at => Time.now - (60*60*24)*rand(1..MAX_MEMBER_ACCOUNT_AGE_DAYS) # between 1 and 700 days ago
-  )
-
-  # Keep trying until we get a unique username + email
-  begin
-    case new_member.gender.id
-    when 1
-      new_member.username = hs_usernames.generate(:male)
-    when 2
-      new_member.username =  hs_usernames.generate(:female)
-    when 3
-      new_member.username = hs_usernames.generate(:neutral)
-    end
-    new_member.email = new_member.username.gsub(/[^a-zA-Z0-9-]/,'') + '-' + rand(1..999999).to_s + '@halfsavage.com'  
-  end while (new_member.username.length < 5) || (new_member.username.length > 30)
-
-  # For some members, give them a referring member
-  if rand(0.0..1.0) <= CHANCE_OF_MEMBER_BEING_REFERRED then
-    new_member.referred_by = Member.where("created_at < ?", new_member.created_at).order("RANDOM()").first
-  end
-
-  if !new_member.valid? then
-    puts "\nMember can't be saved."
-    puts new_member
-    new_member.errors.each{|attr,err| puts "  #{attr} : #{err}" }
-  else
-    new_member.save
-  end
-
-  if rand < 0.8 then 
-    city = WeightedSeedCityGenerator.get_weighted_random_city
-    Address.create!(
-      city: city.name,
-      country: city.country,
-      region: city.region,
-      latitude: city.latitude,
-      longitude: city.longitude,
-      member: new_member
-    )
-  end 
-
-
-  new_member
 end
 
 ###########################
@@ -241,7 +191,7 @@ end
 def create_private_message(hs_messages, earliest_possible_message_time, latest_possible_message_time, should_be_reply_to_post)
   if should_be_reply_to_post then 
     post = Post.where('created_at > ? and created_at < ?', earliest_possible_message_time, latest_possible_message_time).order("RANDOM()").first 
-    message_created_at = Time.at((latest_possible_message_time.to_f - [earliest_possible_message_time, post.created_at].min.to_f)*rand + [earliest_possible_message_time, post.created_at].min.to_f)
+    message_created_at = rand([earliest_possible_message_time, post.created_at].min..latest_possible_message_time)
 
     new_message = Message.new(
       :post => post,
@@ -251,7 +201,7 @@ def create_private_message(hs_messages, earliest_possible_message_time, latest_p
     new_message.member_to = post.member
     new_message.member_from = Member.where('created_at > ?', message_created_at).order("RANDOM()").first
   else 
-    message_created_at = Time.at((latest_possible_message_time.to_f - earliest_possible_message_time.to_f)*rand + earliest_possible_message_time.to_f)    
+    message_created_at = rand(earliest_possible_message_time..latest_possible_message_time)
     # Get 2 members who created their accounts before this message
     members = Member.where('created_at > ?', message_created_at).order("RANDOM()").take(2)
 
@@ -268,7 +218,7 @@ def create_private_message(hs_messages, earliest_possible_message_time, latest_p
 
   # Roll the dice. Was this message seen, and when? (Most messages should be seen already)
   if rand(5)<4 then 
-    new_message.seen = Time.at((Time.now.to_f - new_message.created_at.to_f)*rand + new_message.created_at.to_f)
+    new_message.seen = rand(new_message.created_at..Time.now)
   end
 
   if new_message.member_from.is_moderator and rand(2)==0 then 
@@ -379,7 +329,7 @@ def create_forum_thread(markov_sentences, prolific_members, moderators, public_f
   end
 
   # creation time is some time between "now" and when this member joined
-  post.created_at = Time.at((Time.now.to_f - post.member.created_at.to_f)*rand + post.member.created_at.to_f)
+  post.created_at = rand(post.member.created_at..Time.now)
 
   # Choose forum. Some (not many) posts will be in more than one forum
   # If it's a mod, maybe they're posting in the mod forum?
@@ -399,8 +349,23 @@ def create_forum_thread(markov_sentences, prolific_members, moderators, public_f
     )
   post.save!
 
+  # Generate views for this thread 
+  # TODO: This would be more "realistic" if views included all those who replied to it 
+  Member.order('RANDOM()').take(rand(0..50)).each do |member| 
+    dv = DiscussionView.new({
+      post: post,
+      member: member,
+      tally: rand(1..50),
+      created_at: rand([post.created_at, member.created_at].max .. Time.now)
+      })
+    if dv.tally > 1 
+      dv.updated_at = rand(dv.created_at .. Time.now)
+    end 
+    dv.save!
+  end 
+
   # Generate replies to this thread
-  num_replies = REPLIES_PER_THREAD.sample + rand(-5..5)
+  num_replies = FAKE_REPLIES_PER_THREAD.sample + rand(-5..5)
   num_replies = 0 if num_replies < 0
 
   add_likes_to_post(post) if rand(0..10) < 3
@@ -430,7 +395,7 @@ def create_forum_thread(markov_sentences, prolific_members, moderators, public_f
     end
 
     # Create a number of paragraphs & sentences. Put a couple of line breaks in front if it's the first sentence in a paragraph
-    reply.created_at = Time.at((Time.now.to_f - post.created_at.to_f)*rand + post.created_at.to_f)
+    reply.created_at = rand(post.created_at..Time.now)
     reply.body = markov_text(
       SENTENCES_PER_FORUM_POST_PARAGRAPH, 
       PARAGRAPHS_PER_FORUM_POST, 
@@ -461,30 +426,29 @@ puts ""
 ##################
 
 puts '*** Seeding fake members ***'
-puts "Currently have #{Member.count} members; we'd like to have at least #{MINIMUM_MEMBERS_COUNT}."
-puts "Change MINIMUM_MEMBERS_COUNT in db/seeds.rb if you'd like a different value here."
+puts "Currently have #{Member.count} members; we'd like to have at least #{FAKE_MINIMUM_MEMBERS_COUNT}."
+puts "Change FAKE_MINIMUM_MEMBERS_COUNT in db/seeds.rb if you'd like a different value here."
 starting_member_count = Member.count 
-if (starting_member_count >= MINIMUM_MEMBERS_COUNT) then
+if (starting_member_count >= FAKE_MINIMUM_MEMBERS_COUNT) then
   puts "Ok, we have plenty of fake members. Moving along."
 else
-  #debugger
   WeightedSeedCityGenerator.load_cities('db/seed_helpers/cities-with-population-us.txt')
-  puts "Creating #{MINIMUM_MEMBERS_COUNT-starting_member_count} member(s) to get up to #{MINIMUM_MEMBERS_COUNT}"
+  puts "Creating #{FAKE_MINIMUM_MEMBERS_COUNT-starting_member_count} member(s) to get up to #{FAKE_MINIMUM_MEMBERS_COUNT}"
   male = Gender.find(1)
   female = Gender.find(2)
   complicated = Gender.find(3)
   hs_usernames = HalfSavageUserNames.new
-  1.upto(MINIMUM_MEMBERS_COUNT-starting_member_count) do |i|
+  1.upto(FAKE_MINIMUM_MEMBERS_COUNT-starting_member_count) do |i|
     hs_usernames = HalfSavageUserNames.new if i % 50 == 0
     print "#{i}... " if i % 10 == 0
-      create_member hs_usernames, [male, male, male, female, female, female, complicated].sample
+      SeedMemberGenerator.generate( hs_usernames, [male, male, male, female, female, female, complicated].sample, FAKE_MEMBER_MIN_AGE_YEARS, FAKE_MEMBER_MAX_AGE_YEARS, FAKE_MAX_MEMBER_ACCOUNT_AGE_DAYS, FAKE_CHANCE_OF_MEMBER_BEING_REFERRED)
   end
 end
 current_moderator_count = Member.moderators.count 
-if (current_moderator_count >= MINIMUM_MOD_COUNT)
-  puts "Okay, we have plenty of mods (#{current_moderator_count} of #{MINIMUM_MOD_COUNT}). Moving along."
+if (current_moderator_count >= FAKE_MINIMUM_MOD_COUNT)
+  puts "Okay, we have plenty of mods (#{current_moderator_count} of #{FAKE_MINIMUM_MOD_COUNT}). Moving along."
 else
-  some_losers = Member.where("is_moderator=false").order("RANDOM()").take(MINIMUM_MOD_COUNT - current_moderator_count)
+  some_losers = Member.where("is_moderator=false").order("RANDOM()").take(FAKE_MINIMUM_MOD_COUNT - current_moderator_count)
   print "\nMaking #{some_losers.count} into mods... "
   some_losers.each { |loser| 
     loser.is_moderator = true
@@ -499,13 +463,13 @@ end
 
 puts "\n*** Seeding fake forum threads & replies ***"
 current_thread_count = Post.discussions.count 
-puts "Currently have #{current_thread_count} threads; we'd like to have at least #{MINIMUM_THREAD_COUNT}."
-puts "Change MINIMUM_THREAD_COUNT in db/seeds.rb if you'd like a different value here."
+puts "Currently have #{current_thread_count} threads; we'd like to have at least #{FAKE_MINIMUM_THREAD_COUNT}."
+puts "Change FAKE_MINIMUM_THREAD_COUNT in db/seeds.rb if you'd like a different value here."
 
-if (current_thread_count >= MINIMUM_THREAD_COUNT) then 
+if (current_thread_count >= FAKE_MINIMUM_THREAD_COUNT) then 
   puts "Ok, we have plenty of fake threads. Moving along."
 else
-  puts "Creating #{MINIMUM_THREAD_COUNT - current_thread_count} threads."
+  puts "Creating #{FAKE_MINIMUM_THREAD_COUNT - current_thread_count} threads."
   markov_sentences = get_markov_sentences
   
   # These 10% of the members represent the most prolific posters. We also assume the mods are "prolific"
@@ -516,7 +480,7 @@ else
   public_forums = Forum.active_public
   mod_forums = Forum.active_moderator
 
-  (1..(MINIMUM_THREAD_COUNT - current_thread_count)).each { |i|
+  (1..(FAKE_MINIMUM_THREAD_COUNT - current_thread_count)).each { |i|
     print "#{i}... " if i % 10 == 0
     create_forum_thread(markov_sentences, prolific_members, Member.moderators, public_forums, mod_forums)
   }
