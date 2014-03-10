@@ -29,9 +29,9 @@ class SeedMemberGenerator
       end
 
       if !new_member.valid? then
-        puts "\nMember can't be saved."
-        puts new_member
-        new_member.errors.each{|attr,err| puts "  #{attr} : #{err}" }
+        #puts "\nMember can't be saved."
+        #puts new_member
+        #new_member.errors.each{|attr,err| puts "  #{attr} : #{err}" }
       else
         new_member.save
       end
@@ -50,52 +50,63 @@ class SeedMemberGenerator
       end 
 
       # 80% of them view some profiles 
-      if rand < 0.8 then 
-
-        Member.order('RANDOM()').take(rand(0..50)).each do |viewed_member| 
-          pv = ProfileView.new({
-            viewed_member: viewed_member,
-            member: new_member,
-            tally: rand(1..50),
-            created_at: rand([viewed_member.created_at, new_member.created_at].max .. Time.now)
-            })
-          if pv.tally > 1 
-            pv.updated_at = rand(pv.created_at .. Time.now)
-          end 
-          pv.save!
-        end 
-
-      end 
-
-      # 50% of them get friends
-      if rand < 0.5 then 
-        Member.order("RANDOM()").take(rand(1..50)).each do |other_member|
-  
-          Relationship.create!({
-            member: new_member, 
-            related_member: other_member,
-            friend: true
-            })
-
-          # 50% of them should friend back
-          if rand < 0.5 then 
-            
-            begin 
-              # some of these will fail - particularly the first 
-              # couple of hundred members because we'll get dupes... that's OK, it's just fake data
-              Relationship.create({
-                member: other_member,
-                related_member: new_member,
-                friend: true
+      profile_view_thread = Thread.new do
+        ActiveRecord::Base.connection_pool.with_connection do
+          if rand < 0.8 then 
+            Member.order('RANDOM()').where('id<>?', new_member.id).take(rand(0..25)).each do |viewed_member| 
+              pv = ProfileView.new({
+                viewed_member: viewed_member,
+                member: new_member,
+                tally: rand(1..50),
+                created_at: rand([viewed_member.created_at, new_member.created_at].max .. Time.now)
                 })
-            rescue ActiveRecord::RecordNotUnique => e
+              pv.updated_at = rand(pv.created_at .. Time.now) if pv.tally > 1 
+              pv.save!
             end 
           end 
+        end
+      end
 
-        end 
-      end 
+      relationship_thread = Thread.new do
+        ActiveRecord::Base.connection_pool.with_connection do
 
-      new_member
+          # 50% of them get friends
+          if rand < 0.5 then 
+            Member.order("RANDOM()").where('id<>?', new_member.id).take(rand(1..50)).each do |other_member|
+      
+              begin 
+                Relationship.create!({
+                  member: new_member, 
+                  related_member: other_member,
+                  friend: true
+                  })
+              rescue ActiveRecord::RecordNotUnique => e
+              end 
+
+              # 50% of them should friend back
+              if rand < 0.5 then 
+                
+                begin 
+                  # some of these will fail - particularly the first 
+                  # couple of hundred members because we'll get dupes... that's OK, it's just fake data
+                  Relationship.create({
+                    member: other_member,
+                    related_member: new_member,
+                    friend: true
+                    })
+                rescue ActiveRecord::RecordNotUnique => e
+                end 
+              end 
+
+            end 
+          end 
+        end
+      end
+
+      profile_view_thread.join
+      relationship_thread.join
+      
+      nil
     end
 
 end 

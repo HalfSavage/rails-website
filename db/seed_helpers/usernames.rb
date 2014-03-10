@@ -66,7 +66,7 @@ class HalfSavageUserNames
   }
   @@puns_and_cliches = {
     :neutral => ["Outta My Face", "Big Bad", "Shot In The Arm", "Big Fish Small Pond", "Blaze A Trail", "Bad Hair Day", "Happy As A Clam", "Bury The Hatchet", "Catch22", "Funny Farm", "Flavor Of The Month", "Fancy Pants", "Face The Music", "Go Haywire", "Axe To Grind", "Jump The Shark", "Jury Still Out", "Kangaroo Court", "Lose My Marbles", "Take The Cake", "Spin Doctor", "Spill The Beans",  "Greased Lightning", "Bad Turn", "Hooked On You", "Blue In The Face", "Time Will Tell", "In A Jiffy", "Kill Your Face", "Actions Speak Louder", "Toss Up", "Head Over Heels", "Icing On The Cake", "Hit The Books", "Hit The Sack", "Hast Makes Waste", "Out Of The Blue", "Over The Top", "Fiddlesticks", "Sick Of It", "Slam Dunk", "Poop The Bed" "Pish Posh", "Hot To Trot", "Guns Blazing", "Hell Raiser", "Just A Minute", "Last Hurrah", "Fan The Flames", "Oil And Water", "Knuckle Sandwich", "All Hands On Deck", "Abandon Ship", "Bright Side", "Nail In The Coffin", "Bits And Pieces", "All Over The Map", "Axe To Grind", "Pay Dirt", "Floats Your Boat", "Kid Gloves", "Shot In The Dark", "Skin Deep", "Half Baked", "Head Over Heels", "Hump Day", "Hunker Down", "Horse Around", "Hope Springs Eternal", "Hit The Road", "Hit The Deck", "Easy As Pie", "Up For Grabs", "Gang Bang", "Go Crazy", "Go Bananas", "Gold Digger", "Sick Of It All", "Party On", "Quitters Never Win", "Dick In A Knot", "Finger Lickin", "Rock And Roll"],
-    :male => ["Ants In His Pants", "That Guy"]
+    :male => ["Ants In His Pants"]
   }
   @@instruments = {
     :neutral => %w{calliope carillon castanet chimes windchime cimbalom clarinet classical\ guitar clavichord clavier concertina conch conga\ drum contrabass cornet cowbell cymbals baby\ grand\ piano bagpipe balalaika bandoneón bandura banjo baritone\ horn bass bass\ clarinet bass\ drum bass\ guitar bassoon bell bongo\ drum bouzouki bow brass\ instruments bugle accordion acoustic\ guitar Aeolian\ harp Alphorn alto\ saxophone anvil electric\ guitar electric\ organ English\ horn euphonium fiddle fife flugelhorn flute French\ horn glockenspiel gong grand\ piano guitar hammered\ dulcimer harmonica harmonium harp harpsichord helicon horn hurdy\ gurdy pan\ pipes penny\ whistle percussion piano piccolo pipa pipe\ organ player\ piano pump\ organ saxophone sitar slide\ whistle snare\ drum spinet spoons steel\ drum tabla tambourine theramin thumb\ piano timpani tin\ whistle tom-tom\ drum triangle trombone trumpet tuba tubular\ bells}
@@ -233,22 +233,22 @@ class HalfSavageUserNames
     case rand(0..35)
     when 1 
       name = "#{name} #{@@emoticons.sample}"
-    when 16..17 
+    when 2..3 
       name="~#{name}~"
-    when 2
+    when 4
       name="-=#{name}=-"
-    when 3..10
+    when 5
       name = name.gsub(/[\s'’]/,'') + rand(1..1000).to_s
-    when 17..19
+    when 6..8
       name = name.underscore
-    when 20..25
-      replacement = %w{☆ ♡ xx .o. :: -}.sample
+    when 9..10
+      replacement = %w{☆ ♡ xx .o. :: - .. 😄 👊 💎 💩}.sample
       name = "#{replacement}#{name}#{replacement}"
-    when 14 
-      name = name.gsub(/[\s]/, %w{~ ^ = ★★ ☆}.sample)
-    when 15
+    when 11 
+      name = name.gsub(/[\s]/, %w{~ ^ = ★★ ☆ .}.sample)
+    when 12
       name = name.gsub(/[eioO]/,'e'=>'3','i'=>'1','o'=>'0','O'=>'0')
-    when 16
+    when 13
       name = name.gsub(/[wEBHaOo]/, 'w' => 'ẃ', 'o'=>'ŏ', 'O'=>'0', 'E'=>'ℇ', 'B'=>'ℬ', 'H'=>'ℌ', 'a'=>'ä')
     end 
 

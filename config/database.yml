@@ -18,7 +18,7 @@ development:
   adapter: postgresql
   encoding: unicode
   database: halfsavage_development
-  pool: 5
+  pool: 20
   username: halfsavage
   password: penisballs
   port: 5433

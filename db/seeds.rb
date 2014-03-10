@@ -61,7 +61,6 @@ STANDARD_HASHTAGS = %w{asthma macs pcs art crafting writing herpes beer nerds mi
 # 0.0 = never  0.05 = a 1 in 20 chance
 CHANCE_OF_HASHTAG_AFTER_POST_SENTENCE = 0.1
 
-
 class String
   @@junk_words = %w{while really going means posts could would were his out got can them stop even vol yes no all get these our her because are not need close much has that was just you who young their well you was your this other the a an than then he she it is such up down as for in the a one some and but or few aboard about above across after against along amid among anti around as at before behind below beneath beside besides between beyond but by concerning considering despite down during except excepting excluding following for from in inside into like minus near of off on onto opposite outside over past per plus regarding round save since than through to toward towards under underneath unlike until up upon versus via with within without}
 
@@ -168,13 +167,14 @@ def seed_message_types
   MessageType.create({id: 1, name: 'Private Message'}) if !MessageType.find_by_id(1)
 end
 
-def add_likes_to_post(post)
+def add_likes_to_post(post, all_members)
   # Maybe add some likes...
   num_likes = [0,1,1,1,1,5,5,5,10,10,20].sample + rand(0..3)
-  1.upto(num_likes) do
+  members = all_members.sample(num_likes)
+  0.upto(num_likes-1) do |i|
     like = Like.new(
       post: post,
-      member: Member.order("RANDOM()").first,
+      member: members[i],
       created_at: rand(post.created_at..Time.now)
     )
     begin
@@ -196,7 +196,8 @@ def create_private_message(hs_messages, earliest_possible_message_time, latest_p
     new_message = Message.new(
       :post => post,
       :message_type => MessageType.find(1),
-      :body => hs_messages.get_private_message_post_reply_body(1..5)
+      :body => hs_messages.get_private_message_post_reply_body(1..5),
+      :created_at => message_created_at
     )
     new_message.member_to = post.member
     new_message.member_from = Member.where('created_at > ?', message_created_at).order("RANDOM()").first
@@ -317,7 +318,7 @@ def get_markov_sentences
 end
 
 # Creates & saves a single forum thread, with replies
-def create_forum_thread(markov_sentences, prolific_members, moderators, public_forums, mod_forums)
+def create_forum_thread(markov_sentences, all_members, prolific_members, moderators, public_forums, mod_forums)
   hs_subjects = HalfSavageSubjects.new
   post = Post.new({ body: '', subject: hs_subjects.random_subject })
 
@@ -325,7 +326,7 @@ def create_forum_thread(markov_sentences, prolific_members, moderators, public_f
   if rand(0..1) == 1
     post.member = prolific_members.sample
   else
-    post.member = Member.order("RANDOM()").first
+    post.member = all_members.sample
   end
 
   # creation time is some time between "now" and when this member joined
@@ -347,11 +348,18 @@ def create_forum_thread(markov_sentences, prolific_members, moderators, public_f
     STANDARD_HASHTAGS,
     FORUM_SPECIFIC_HASHTAGS[post.forums[0].name]
     )
-  post.save!
+  begin
+    post.save!
+  rescue Exception => exp
+    print 'hm'
+    debugger
+    print 'hm'
+  end 
 
   # Generate views for this thread 
   # TODO: This would be more "realistic" if views included all those who replied to it 
-  Member.order('RANDOM()').take(rand(0..50)).each do |member| 
+  # Member.order('RANDOM()').take(rand(0..50)).each do |member| 
+  all_members.sample(rand(0..30)).each do |member| 
     dv = DiscussionView.new({
       post: post,
       member: member,
@@ -368,7 +376,7 @@ def create_forum_thread(markov_sentences, prolific_members, moderators, public_f
   num_replies = FAKE_REPLIES_PER_THREAD.sample + rand(-5..5)
   num_replies = 0 if num_replies < 0
 
-  add_likes_to_post(post) if rand(0..10) < 3
+  add_likes_to_post(post, all_members) if rand(0..10) < 3
 
   (1..num_replies).each { |j|
     reply = Post.new( { parent: post } )
@@ -381,7 +389,7 @@ def create_forum_thread(markov_sentences, prolific_members, moderators, public_f
     end
 
     if reply.member.nil?
-      reply.member = Member.order("RANDOM()").first
+      reply.member = all_members.sample
     end
 
     # Some moderator replies should be in moderator voice
@@ -405,7 +413,7 @@ def create_forum_thread(markov_sentences, prolific_members, moderators, public_f
       FORUM_SPECIFIC_HASHTAGS[post.forums[0].name]
       )
     reply.save!
-    add_likes_to_post(reply) if rand(0..10) < 3
+    add_likes_to_post(reply, all_members) if rand(0..10) < 3
   }
 end
 
@@ -425,7 +433,7 @@ puts ""
 # Create members #
 ##################
 
-puts '*** Seeding fake members ***'
+puts '*** Seeding fake members, relationships & profile views ***'
 puts "Currently have #{Member.count} members; we'd like to have at least #{FAKE_MINIMUM_MEMBERS_COUNT}."
 puts "Change FAKE_MINIMUM_MEMBERS_COUNT in db/seeds.rb if you'd like a different value here."
 starting_member_count = Member.count 
@@ -441,7 +449,10 @@ else
   1.upto(FAKE_MINIMUM_MEMBERS_COUNT-starting_member_count) do |i|
     hs_usernames = HalfSavageUserNames.new if i % 50 == 0
     print "#{i}... " if i % 10 == 0
+    ActiveRecord::Base.connection_pool.with_connection do
       SeedMemberGenerator.generate( hs_usernames, [male, male, male, female, female, female, complicated].sample, FAKE_MEMBER_MIN_AGE_YEARS, FAKE_MEMBER_MAX_AGE_YEARS, FAKE_MAX_MEMBER_ACCOUNT_AGE_DAYS, FAKE_CHANCE_OF_MEMBER_BEING_REFERRED)
+    end
+    ActiveRecord::Base.connection_pool.clear_stale_cached_connections!
   end
 end
 current_moderator_count = Member.moderators.count 
@@ -471,19 +482,25 @@ if (current_thread_count >= FAKE_MINIMUM_THREAD_COUNT) then
 else
   puts "Creating #{FAKE_MINIMUM_THREAD_COUNT - current_thread_count} threads."
   markov_sentences = get_markov_sentences
-  
-  # These 10% of the members represent the most prolific posters. We also assume the mods are "prolific"
-  # We do this because in reality, most posts come from a small minority of members.
-  prolific_members = Member.order("RANDOM()").take(Member.count / 10) + Member.moderators
+    
+    threads = []
+    1.upto(8) do 
+      threads << Thread.new do  
+        ActiveRecord::Base.connection_pool.with_connection do
+          Thread.current['all_members'] = Member.all
+          Thread.current['moderators'] = Member.moderators
+          Thread.current['public_forums'] = Forum.active_public
+          Thread.current['mod_forums'] = Forum.active_moderator
+          Thread.current['prolific_members'] = Thread.current['all_members'].sample(Member.count / 100) + Thread.current['moderators'] 
+          while (discussion_count_inner = Post.where(parent_id: nil).count) < FAKE_MINIMUM_THREAD_COUNT do 
+            create_forum_thread(markov_sentences, Thread.current['all_members'], Thread.current['prolific_members'], Thread.current['moderators'], Thread.current['public_forums'] , Thread.current['mod_forums'])
+            print "#{discussion_count_inner}... " if discussion_count_inner % 50 == 0
+          end 
+        end
+      end
+    end
+    threads.each { |t| t.join }  
 
-  # Get the forums
-  public_forums = Forum.active_public
-  mod_forums = Forum.active_moderator
-
-  (1..(FAKE_MINIMUM_THREAD_COUNT - current_thread_count)).each { |i|
-    print "#{i}... " if i % 10 == 0
-    create_forum_thread(markov_sentences, prolific_members, Member.moderators, public_forums, mod_forums)
-  }
   puts " done creating threads and replies"
 end
 

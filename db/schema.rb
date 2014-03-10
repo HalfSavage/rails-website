@@ -15,6 +15,7 @@ ActiveRecord::Schema.define(version: 20140309230923) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+  #enable_extension "pg_stat_statements"
 
   create_table "members", force: true do |t|
     t.string   "username"
@@ -89,9 +90,7 @@ ActiveRecord::Schema.define(version: 20140309230923) do
     t.datetime "updated_at"
     t.index ["member_id", "post_id", "updated_at", "tally"], :name => "relationships_idx_covering"
     t.index ["member_id", "post_id"], :name => "discussion_views_idx_member_post", :unique => true
-    t.index ["member_id"], :name => "fk__discussion_views_member_id"
     t.index ["member_id"], :name => "index_discussion_views_on_member_id"
-    t.index ["post_id"], :name => "fk__discussion_views_post_id"
     t.index ["post_id"], :name => "index_discussion_views_on_post_id"
     t.foreign_key ["member_id"], "members", ["id"], :on_update => :no_action, :on_delete => :no_action, :name => "fk_discussion_views_member_id"
     t.foreign_key ["post_id"], "posts", ["id"], :on_update => :no_action, :on_delete => :no_action, :name => "fk_discussion_views_post_id"
@@ -162,6 +161,7 @@ ActiveRecord::Schema.define(version: 20140309230923) do
     t.index ["member_to_id", "seen", "message_type_id"], :name => "index_messages_on_member_to_id_and_seen_and_message_type_id"
   end
 
+  #create_view "pg_stat_statements", " SELECT pg_stat_statements.userid, \n    pg_stat_statements.dbid, \n    pg_stat_statements.query, \n    pg_stat_statements.calls, \n    pg_stat_statements.total_time, \n    pg_stat_statements.rows, \n    pg_stat_statements.shared_blks_hit, \n    pg_stat_statements.shared_blks_read, \n    pg_stat_statements.shared_blks_dirtied, \n    pg_stat_statements.shared_blks_written, \n    pg_stat_statements.local_blks_hit, \n    pg_stat_statements.local_blks_read, \n    pg_stat_statements.local_blks_dirtied, \n    pg_stat_statements.local_blks_written, \n    pg_stat_statements.temp_blks_read, \n    pg_stat_statements.temp_blks_written, \n    pg_stat_statements.blk_read_time, \n    pg_stat_statements.blk_write_time\n   FROM pg_stat_statements() pg_stat_statements(userid, dbid, query, calls, total_time, rows, shared_blks_hit, shared_blks_read, shared_blks_dirtied, shared_blks_written, local_blks_hit, local_blks_read, local_blks_dirtied, local_blks_written, temp_blks_read, temp_blks_written, blk_read_time, blk_write_time)", :force => true
   create_table "post_action_types", force: true do |t|
     t.string   "name"
     t.boolean  "moderator_only"
@@ -196,7 +196,6 @@ ActiveRecord::Schema.define(version: 20140309230923) do
     t.integer  "tally",            default: 0
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.index ["member_id"], :name => "fk__profile_views_member_id"
     t.index ["member_id"], :name => "index_profile_views_on_member_id"
     t.index ["viewed_member_id", "member_id", "tally"], :name => "profile_views_idx_awesome", :unique => true
     t.index ["viewed_member_id"], :name => "index_profile_views_on_viewed_member_id"
@@ -224,6 +223,7 @@ ActiveRecord::Schema.define(version: 20140309230923) do
     t.string   "tag_text"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.index ["tag_text"], :name => "tag_idx_lower", :case_sensitive => false
   end
 
   create_view "tags_trending", " SELECT pt.tag_id, \n    t.tag_text, \n    count(pt.tag_id) AS count, \n    sum(\n        CASE\n            WHEN ((date_part('epoch'::text, now()) - date_part('epoch'::text, pt.created_at)) < (7200)::double precision) THEN (100.0)::double precision\n            ELSE ((1)::double precision + ((100.0)::double precision / ((date_part('epoch'::text, now()) - date_part('epoch'::text, pt.created_at)) / (7200.0)::double precision)))\n        END) AS score\n   FROM ((post_tags pt\n   JOIN forums_posts fp ON ((pt.post_id = fp.post_id)))\n   JOIN tags t ON ((pt.tag_id = t.id)))\n  GROUP BY pt.tag_id, t.tag_text\n  ORDER BY sum(\nCASE\n    WHEN ((date_part('epoch'::text, now()) - date_part('epoch'::text, pt.created_at)) < (7200)::double precision) THEN (100.0)::double precision\n    ELSE ((1)::double precision + ((100.0)::double precision / ((date_part('epoch'::text, now()) - date_part('epoch'::text, pt.created_at)) / (7200.0)::double precision)))\nEND) DESC\n LIMIT 100", :force => true
