@@ -1,47 +1,64 @@
 class CreateDiscussionsView < ActiveRecord::Migration
   def self.up
     execute <<-SQL
+      create or replace view posts_last_replies as 
+      SELECT p_last_replies.reply_number,
+        p_last_replies.parent_id,
+        p_last_replies.created_at,
+        p_last_replies.member_id
+       FROM ( SELECT row_number() OVER (PARTITION BY p.parent_id ORDER BY p.created_at DESC) AS reply_number,
+                p.parent_id,
+                p.created_at,
+                p.member_id
+               FROM posts p
+              WHERE p.parent_id IS NOT NULL AND p.is_deleted = false and p.is_private_moderator_voice = false) p_last_replies
+      WHERE p_last_replies.reply_number = 1;
+    SQL
+
+    execute <<-SQL 
+      create or repace view posts_last_replies_with_usernames as 
+       SELECT p_last_replies.reply_number,
+        p_last_replies.parent_id,
+        p_last_replies.created_at,
+        p_last_replies.member_id,
+        m.username
+       FROM ( SELECT row_number() OVER (PARTITION BY p.parent_id ORDER BY p.created_at DESC) AS reply_number,
+                p.parent_id,
+                p.created_at,
+                p.member_id
+               FROM posts p
+              WHERE p.parent_id IS NOT NULL AND p.is_deleted = false AND p.is_private_moderator_voice = false) p_last_replies
+       JOIN members m ON p_last_replies.member_id = m.id
+      WHERE p_last_replies.reply_number = 1;
+    SQL  
+
+    execute <<-SQL
       -- We call it "ForumThreads" and not "Threads" since "Thread" is a reserved keyword in Ruby
       create or replace view Discussions
       as
-      select
-        f.name,
+       SELECT f.name,
         fp.forum_id,
-        p.id as id,
-        p.member_id as member_id,
+        p.id,
+        p.member_id,
         p.body,
         p.subject,
         p.created_at,
         p.updated_at,
         m.username,
-        (select count(1) from posts pReply where pReply.parent_id = p.id and is_deleted=false) as reply_count,
-        pLastReply.reply_created_at,
-        pLastReply.reply_username
-      from
-        posts p 
-          inner join forums_posts fp on p.id = fp.post_id
-          inner join forums f on fp.forum_id = f.id 
-          inner join members m on p.member_id = m.id 
-          left outer join (
-            -- This anonymous table contains the most recent reply for each thread
-            select
-              rank() over (partition by parent_id order by p.created_at desc) as reply_number,
-              p.parent_id,
-              p.created_at as reply_created_at,
-              m.username as reply_username,
-              m.id as reply_member_id
-            from
-              posts p inner join members m on p.member_id = m.id
-            where
-              p.parent_id is not null
-              and is_deleted is not null
-          ) pLastReply on p.id = pLastReply.parent_id and pLastReply.reply_number=1
-      where
-        p.parent_id is null
-        and is_deleted=false
-      order by 
-        coalesce(pLastReply.reply_created_at, p.created_at) desc
+        ( SELECT count(1) AS count
+               FROM posts preply
+              WHERE preply.parent_id = p.id AND preply.is_deleted = false) AS reply_count,
+        plr.created_at AS reply_created_at,
+        plr.username AS reply_username
+       FROM posts p
+       JOIN forums_posts fp ON p.id = fp.post_id
+       JOIN forums f ON fp.forum_id = f.id
+       JOIN members m ON p.member_id = m.id
+       LEFT JOIN posts_last_replies_with_usernames plr ON p.id = plr.parent_id
+      WHERE p.parent_id IS NULL AND p.is_deleted = false
+      ORDER BY COALESCE(plr.created_at, p.created_at) DESC;
     SQL
+
 
     # Sorry for the raw SQL here... don't know how to do "desc" ordering in Rails
     execute <<-SQL
@@ -50,9 +67,19 @@ class CreateDiscussionsView < ActiveRecord::Migration
   end
 
   def self.down 
+    
     execute <<-SQL
       drop view Discussions
     SQL
+
+    execute <<-SQL
+      drop view posts_last_replies
+    SQL   
+
+    execute <<-SQL
+      drop view posts_last_replies_with_usernames
+    SQL    
+
 
     execute <<-SQL 
       drop index ix_posts_for_discussions
