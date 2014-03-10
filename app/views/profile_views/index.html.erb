@@ -1,0 +1,31 @@
+<h1>Listing profile_views</h1>
+
+<table>
+  <thead>
+    <tr>
+      <th>Member</th>
+      <th>Member</th>
+      <th>Tally</th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <% @profile_views.each do |profile_view| %>
+      <tr>
+        <td><%= profile_view.member %></td>
+        <td><%= profile_view.member %></td>
+        <td><%= profile_view.tally %></td>
+        <td><%= link_to 'Show', profile_view %></td>
+        <td><%= link_to 'Edit', edit_profile_view_path(profile_view) %></td>
+        <td><%= link_to 'Destroy', profile_view, method: :delete, data: { confirm: 'Are you sure?' } %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<br>
+
+<%= link_to 'New Profile view', new_profile_view_path %>
