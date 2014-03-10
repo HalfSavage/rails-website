@@ -1,4 +1,10 @@
 Halfsavage::Application.routes.draw do
+  resources :discussion_views
+
+  resources :profile_views
+
+  resources :relationships
+
   resources :addresses
 
   devise_for :members
