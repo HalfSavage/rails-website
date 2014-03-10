@@ -17,20 +17,20 @@ class HalfSavageUserNames
   @@MAX_DIE_ROLL = 160
 
   @@properties = {
-    :neutral => ['Rescue Rangers', 'Hunter x Hunter','Star Wars','Gundam','Evangelion','My Little Pony','Lord of The Rings','Pokemon','Call Of Duty','Final Fantasy','Dragon Quest','Cosby Show','Dukes of Hazzard','Twilight','Back To The Future','Sweet Valley High','Star Trek','One Piece','Hellsing', 'Trigun', 'Firefly']
+    :neutral => ['Rescue Rangers', 'Hunter x Hunter','Star Wars','Gundam','Evangelion','My Little Pony','Lord of The Rings','Pokemon','Call Of Duty','Final Fantasy','Dragon Quest','Cosby Show','Dukes of Hazzard','Twilight','Back To The Future','Sweet Valley High','Star Trek','One Piece','Hellsing', 'Trigun', 'Firefly', 'Marvel']
   }
   @@characters = {
-    :male => %w{Snape Dumbledore Naruto Lando Aragorn Draco Severus Littlefinger Batman Khal Davos Hodor Gendry Renly Theon Joffrey Han Tyrion Tywin Rock\ Lee Jabba Sasuke Akamaru Shino Choji Shikamaru Guy},
+    :male => %w{Snape Dumbledore Naruto Lando Aragorn Draco Severus Littlefinger Batman Khal Davos Hodor Gendry Renly Theon Joffrey Han Tyrion Tywin Rock\ Lee Jabba Sasuke Akamaru Shino Choji Shikamaru Guy Spiderman Davros Sherlock Oberyn},
     :female => %w{Snow\ White Morticia Hermione Galadrial Michonne Willow Cinderella Princess\ Jasmine Mulan Ygritte Katniss Zelda Samus Daisy Wonder\ Woman Khaleesi Cersei Marceline Arya Hinata Ino Shizune Eowyn Sabrina Arwen Merida Ariel Belle Bubblegum},
     :neutral => %w{Robo} # couldn't find gender-neutral sci-fi characters! sorry!
 	}
   @@relationship = {
     :male => %w{brother dad husband boyfriend},
     :female => %w{bitch mom sister wife girlfriend},
-    :neutral => %w{teacher professor slut slave fuckbuddy lovechild}
+    :neutral => %w{teacher professor slut slave fuckbuddy lovechild bestie}
   }
   @@character_last_names = {
-    :neutral => %w{Potter Skywalker Lovegood Targaryen Diggle Slytherin Hufflepuff Weasley Drogo Stark Greyjoy Lannister Bolton Baratheon Martell Tully Tyrell Uzumaki   }
+    :neutral => %w{Potter Skywalker Lovegood Targaryen Diggle Slytherin Hufflepuff Weasley Drogo Stark Greyjoy Lannister Bolton Baratheon Martell Tully Tyrell Uzumaki Martell }
   }
   @@verbs_past = {
     :neutral => ["crushing on","loving","obsessed with","masturbating to","lovesick for", "killed by", "smitten by", "bedazzled by", "fondled by", "loved by", "stalked by", "touched by", "fucked by", "loved by", "hated by"]
@@ -40,7 +40,7 @@ class HalfSavageUserNames
   }
   @@names = {
     :male => %w{Booby Hideo Akira Ichiro Masashi Yoshi Toshio Kaz Hideo Jimmy Jimbo  Jake Julian Ari Todd Angus Kendrick Finn Jordan  Boba Achilles Ned Jeremy Luke Mark Abdul Gregg Geoff Rolando Marco Yuri Zack},
-    :female => %w{Akiko Eri Hitomi Sachiko Mari Kimiko Noriko Yumiko Loretta Riley Ivy Clarissa Sapphire Alice Alicia Cheri Jayla Rosie Robyn Trixie Denise Helena Margaery Sherri Scarlett Lily Sophie Sadia Arya Amelia Emma Felicia Emily  Skye Elizabeth Liz  Lana Betsy Gina Annie Beth Cindy Deidre Debbie Rikki Roni Aimee },
+    :female => %w{Akiko Eri Hitomi Sachiko Mari Kimiko Noriko Yumiko Loretta Riley Ivy Clarissa Sapphire Alice Alicia Cheri Jayla Rosie Robyn Trixie Denise Helena Margaery Sherri Scarlett Lily Sophie Sadia Arya Amelia Emma Felicia Emily Skye Elizabeth Liz  Lana Betsy Gina Annie Beth Cindy Deidre Debbie Rikki Roni Aimee },
     :neutral => %w{Dakota Justic Jaylin Jessie Jamie Casey Skyler Riley Amari River Quinn Dallas Taylor Dylan}
   }
   @@prefixes = {
@@ -49,27 +49,27 @@ class HalfSavageUserNames
     :female => %w{Countess Queen Abby Princess Empress Miss Cowgirl Angel Her\ Highness}
   }
   @@places = {
-    :neutral => %w{Endor Bolivia Nantucket Hogwarts Houston Phoenix Austin Columbus Ohio Texas California Detroit Chicago Winterfell Highgarden Tatooine  New\ York Los\ Angeles Mars Venus Andromeda Pluto Neptune Uranus Saturn Jupiter }
+    :neutral => %w{Endor Bolivia Nantucket Hogwarts Houston Phoenix Austin Columbus Ohio Texas California Detroit Chicago Winterfell Highgarden Tatooine  New\ York Los\ Angeles Mars Venus Andromeda Pluto Neptune Uranus Saturn Jupiter}
   }
   @@ethnicities = { 
-    :neutral => %w{Russian English Scottish Japanese Kashmiri Arabic Gaelic Bulgarian Croatian American French Turkish Tibetan Yiddish Kurdish Mandarin Mayan Greek Welsh Swedish Norweigian Icelandic}
+    :neutral => %w{Russian English Scottish Japanese Kashmiri Arabic Gaelic Bulgarian Croatian American French Turkish Tibetan Yiddish Kurdish Mandarin Mayan Greek Welsh Swedish Norweigian Icelandic Dothraki Welsh Gallifrian}
   }
   @@nouns = {
-    :neutral => %w{Wombat Handjob Blowjob Neckbeard WeebleWobble Nippletwister Handjob Unicorn Microchip Crime\ Lord Heart\ Attack Samurai Reporter Swimmer Puppy Firewall Abortion Trainwreck Hobo Laser Cupcake Pulsar Vampire Jedi Ninja Psychopath Dingbat Warrior Comet Meteor Nipplekicker Bellhop Chef Dancer Drummer Firefighter Falconer Flutist Gardener Lunatic Student Jester Janitor Linguist Magician Locksmith Miner Monk},
-    :male => %w{Guy Dude Chump He-Man Asshole Hunk},
-    :female => %w{Girl Woman Angel Maiden Vixen Mouse }
+    :neutral => %w{Wombat Handjob Blowjob Neckbeard WeebleWobble Nippletwister Handjob Unicorn Microchip Crime\ Lord Heart\ Attack Samurai Reporter Swimmer Puppy Firewall Abortion Trainwreck Hobo Whippersnapper Firecracker Laser Cupcake Pulsar Vampire Jedi Ninja Psychopath Dingbat Warrior Comet Meteor Nipplekicker Bellhop Chef Dancer Drummer Firefighter MammaJamma Falconer Flutist Gardener Lunatic Student Jester Janitor Linguist Magician Locksmith Miner Monk},
+    :male => %w{Guy Dude Chump He-Man Asshole Hunk General Sargeant},
+    :female => %w{Girl Woman Angel Maiden Vixen Mouse Princess General Commander}
   }
   @@adjectives = {
     :neutral => %w{Sexual Spicy Flaming\ Hot Magical Negative Nasty Punctual Pepperoni-Flavored Quiet Quizzical Querulous Ribald Rip\ Roaring Rectal Relaxed Shocking Stupendous Turbulent Turgid Techno Unbeatable Unbeatable Valuable Wasteful Wistful Wonderful Whopping Masked Dangerous Golden Silver Persnickity Sexy Dirty Deep\ Dick Delightful Sleepy Fabulous Abstract Amazing Austistic Buff Crazy Cranky Crafty Dingbat Devious Diabolical Easy-Goin' Erotic Exciting Fab Fabulous Fiery Flashy Funny Gloomy Gentle Galloping Hotheaded Hella\ Cool Persnickity Peevish Sassy Saucy Sloppy Timid Testy Touchy-Feely Inglorious Icky Spicy },
-    :male => %w{Brawny Dashing },
-    :female => %w{Dainty Fertile Angelic Fertile}
+    :male => %w{Brawny Dashing 'Inappropriately Erect'},
+    :female => %w{Dainty Fertile Angelic Fertile Fluttering}
   }
   @@puns_and_cliches = {
-    :neutral => ["Shot In The Arm", "Big Fish Small Pond", "Blaze A Trail", "Bad Hair Day", "Happy As A Clam", "Bury The Hatchet", "Catch22", "Funny Farm", "Flavor Of The Month", "Fancy Pants", "Face The Music", "Go Haywire", "Axe To Grind", "Jump The Shark", "Jury Still Out", "Kangaroo Court", "Lose My Marbles", "Take The Cake", "Spin Doctor", "Spill The Beans",  "Greased Lightning", "Bad Turn", "Hooked On You", "Blue In The Face", "Time Will Tell", "In A Jiffy", "Kill Your Face", "Actions Speak Louder", "Toss Up", "Head Over Heels", "Icing On The Cake", "Hit The Books", "Hit The Sack", "Hast Makes Waste", "Out Of The Blue", "Over The Top", "Fiddlesticks", "Sick Of It", "Slam Dunk", "Poop The Bed" "Pish Posh", "Hot To Trot", "Guns Blazing", "Hell Raiser", "Just A Minute", "Last Hurrah", "Fan The Flames", "Oil And Water", "Knuckle Sandwich", "All Hands On Deck", "Abandon Ship", "Bright Side", "Nail In The Coffin", "Bits And Pieces", "All Over The Map", "Axe To Grind", "Pay Dirt", "Floats Your Boat", "Kid Gloves", "Shot In The Dark", "Skin Deep", "Half Baked", "Head Over Heels", "Hump Day", "Hunker Down", "Horse Around", "Hope Springs Eternal", "Hit The Road", "Hit The Deck", "Easy As Pie", "Up For Grabs", "Gang Bang", "Go Crazy", "Go Bananas", "Gold Digger"],
-    :male => ["Ants In His Pants"]
+    :neutral => ["Outta My Face", "Big Bad", "Shot In The Arm", "Big Fish Small Pond", "Blaze A Trail", "Bad Hair Day", "Happy As A Clam", "Bury The Hatchet", "Catch22", "Funny Farm", "Flavor Of The Month", "Fancy Pants", "Face The Music", "Go Haywire", "Axe To Grind", "Jump The Shark", "Jury Still Out", "Kangaroo Court", "Lose My Marbles", "Take The Cake", "Spin Doctor", "Spill The Beans",  "Greased Lightning", "Bad Turn", "Hooked On You", "Blue In The Face", "Time Will Tell", "In A Jiffy", "Kill Your Face", "Actions Speak Louder", "Toss Up", "Head Over Heels", "Icing On The Cake", "Hit The Books", "Hit The Sack", "Hast Makes Waste", "Out Of The Blue", "Over The Top", "Fiddlesticks", "Sick Of It", "Slam Dunk", "Poop The Bed" "Pish Posh", "Hot To Trot", "Guns Blazing", "Hell Raiser", "Just A Minute", "Last Hurrah", "Fan The Flames", "Oil And Water", "Knuckle Sandwich", "All Hands On Deck", "Abandon Ship", "Bright Side", "Nail In The Coffin", "Bits And Pieces", "All Over The Map", "Axe To Grind", "Pay Dirt", "Floats Your Boat", "Kid Gloves", "Shot In The Dark", "Skin Deep", "Half Baked", "Head Over Heels", "Hump Day", "Hunker Down", "Horse Around", "Hope Springs Eternal", "Hit The Road", "Hit The Deck", "Easy As Pie", "Up For Grabs", "Gang Bang", "Go Crazy", "Go Bananas", "Gold Digger", "Sick Of It All", "Party On", "Quitters Never Win", "Dick In A Knot", "Finger Lickin", "Rock And Roll"],
+    :male => ["Ants In His Pants", "That Guy"]
   }
   @@instruments = {
-    :neutral => %w{calliope carillon castanet celesta cello harp chimes windchime cimbalom clarinet classical\ guitar clavichord clavier concertina conch conga\ drum contrabass cornet cowbell cymbals baby\ grand\ piano bagpipe balalaika bandoneón bandura banjo baritone\ horn bass bass\ clarinet bass\ drum bass\ guitar bassoon bell bongo\ drum bouzouki bow brass\ instruments bugle accordion acoustic\ guitar Aeolian\ harp Alphorn alto\ saxophone anvil electric\ guitar electric\ organ English\ horn euphonium fiddle fife flugelhorn flute French\ horn glockenspiel gong grand\ piano guitar hammered\ dulcimer harmonica harmonium harp harpsichord helicon horn hurdy\ gurdy pan\ pipes penny\ whistle percussion piano piccolo pipa pipe\ organ player\ piano pump\ organ saxophone sitar slide\ whistle snare\ drum spinet spoons steel\ drum tabla tambourine theramin thumb\ piano timpani tin\ whistle tom-tom\ drum triangle trombone trumpet tuba tubular\ bells}
+    :neutral => %w{calliope carillon castanet chimes windchime cimbalom clarinet classical\ guitar clavichord clavier concertina conch conga\ drum contrabass cornet cowbell cymbals baby\ grand\ piano bagpipe balalaika bandoneón bandura banjo baritone\ horn bass bass\ clarinet bass\ drum bass\ guitar bassoon bell bongo\ drum bouzouki bow brass\ instruments bugle accordion acoustic\ guitar Aeolian\ harp Alphorn alto\ saxophone anvil electric\ guitar electric\ organ English\ horn euphonium fiddle fife flugelhorn flute French\ horn glockenspiel gong grand\ piano guitar hammered\ dulcimer harmonica harmonium harp harpsichord helicon horn hurdy\ gurdy pan\ pipes penny\ whistle percussion piano piccolo pipa pipe\ organ player\ piano pump\ organ saxophone sitar slide\ whistle snare\ drum spinet spoons steel\ drum tabla tambourine theramin thumb\ piano timpani tin\ whistle tom-tom\ drum triangle trombone trumpet tuba tubular\ bells}
   }
   @@jobs = {
     :neutral => %w{accountant actor actress actuary advisor aide ambassador animator archer athlete artist astronaut astronomer attorney auctioneer author babysitter baker ballerina banker barber baseball\ player basketball\ player bellhop blacksmith bookkeeper biologist bowler builder butcher butler cab\ driver calligrapher captain cardiologist caregiver carpenter cartographer cartoonist cashier catcher caterer cellist chaplain chef chemist chauffeur clerk clergyman clergywoman coach cobbler composer concierge consul contractor cook cop coroner courier cryptographer custodian dancer dentist deputy dermatologist designer detective dictator director disc\ jockey diver doctor doorman driver drummer drycleaner ecologist economist editor educator electrician empress emperor engineer entertainer entomologist entrepreneur executive explorer exporter exterminator extra\ (in\ a\ movie) falconer farmer financier firefighter fisherman flutist football\ player foreman game\ designer garbage\ man gardener gatherer gemcutter geneticist general geologist geographer golfer governor grocer guide hairdresser handyman harpist highway\ patrol hobo hunter illustrator importer instructor intern internist interpreter inventor investigator jailer janitor jeweler jester jockey journalist judge karate\ teacher laborer landlord landscaper laundress lawyer lecturer legal\ aide librarian librettist lifeguard linguist lobbyist locksmith lyricist magician maid mail\ carrier manager manufacturer marine marketer mason mathematician mayor mechanic messenger midwife miner model monk muralist musician navigator negotiator notary novelist nun nurse oboist operator ophthalmologist optician oracle orderly ornithologist painter paleontologist paralegal park\ ranger pathologist pawnbroker peddler pediatrician performer percussionist pharmacist philanthropist philosopher photographer physician physicist pianist pilot pitcher plumber poet police policeman policewoman politician president prince princess principal private private\ detective producer programmer professor psychiatrist\ psychologist publisher quarterback quilter radiologist rancher ranger real\ estate\ agent receptionist referee registrar reporter representative researcher restauranteur retailer retiree sailor salesperson samurai saxophonist scholar scientist scout scuba\ diver seamstress security\ guard senator sheriff smith singer socialite soldier spy star statistician stockbroker street\ sweeper student surgeon surveyor swimmer tailor tax\ collector taxidermist taxi\ driver teacher technician tennis\ player test\ pilot tiler toolmaker trader trainer translator trash\ collector travel\ agent treasurer truck\ driver tutor typist umpire undertaker usher valet veteran veterinarian vicar violinist waiter waitress warden warrior watchmaker weaver welder woodcarver workman wrangler writer xylophonist yodeler zookeeper zoologist}
