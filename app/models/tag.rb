@@ -3,10 +3,8 @@ class Tag < ActiveRecord::Base
   attr_accessor :score
 
   scope :trending, -> {
-    puts "fart"
     joins("inner join tags_trending tt on tt.tag_id = tags.id ").order("score desc")
   }
-
 
   def self.trending_in_forum(f)
     fid = (f.is_a? Forum) ? f.id : f.to_i 
