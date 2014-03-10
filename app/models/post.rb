@@ -13,6 +13,7 @@ class Post < ActiveRecord::Base
 
   # Hooks
   before_save :create_slug
+  before_save :check_if_tags_need_to_be_deleted
   after_save :update_tags
   after_initialize :set_defaults, on: [:create]
 
@@ -34,11 +35,20 @@ class Post < ActiveRecord::Base
     end 
   end 
 
+  def check_if_tags_need_to_be_deleted
+    @was_a_new_record = self.new_record?
+  end 
+
   def update_tags 
     # Just delete all existing tags. This is inefficient obviously... eventually we'll want 
-    # to just delete the tags that are no longer in the post. But this only happens once,
-    # when a post is saved, so whatever.
-    PostTag.delete_all(post_id: id)
+    # to just delete the tags that are no longer in the post. But this only happens when a post
+    # is updated, not during the first time it's saved, so no biggie
+
+    #puts "update_tags: new record? #{@was_a_new_record}"
+    if !@was_a_new_record 
+      #puts "need to delete PostTags..."
+      PostTag.delete_all(post_id: id) 
+    end 
 
     # Pull all the hashtags out into array via regex
     tags = body.scan(/(?:(?<=\s)|^)#(\w*[A-Za-z_]+\w*)/)
@@ -58,17 +68,8 @@ class Post < ActiveRecord::Base
     tags.each{ |tag_text| 
       if (count<max_tags_per_post) then
         tag = Tag.find_by_tag_or_new(tag_text)
-        tag.created_at = self.created_at
-        tag.save
-        post_tag = PostTag.new({tag: tag, post: self, created_at: self.created_at})
-        begin 
-          post_tag.save
-        rescue Exception=>e 
-          puts "Fuck. Tags: #{tags} Current: #{tag_text}"
-          puts e
-          debugger
-        end 
-        count+=1
+        tag.save! if tag.new_record?
+        PostTag.create!({tag: tag, post: self, created_at: self.created_at})
       end 
     }
   end 
