@@ -1,0 +1,31 @@
+<h1>Listing discussion_views</h1>
+
+<table>
+  <thead>
+    <tr>
+      <th>Post</th>
+      <th>Member</th>
+      <th>Tally</th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <% @discussion_views.each do |discussion_view| %>
+      <tr>
+        <td><%= discussion_view.post %></td>
+        <td><%= discussion_view.member %></td>
+        <td><%= discussion_view.tally %></td>
+        <td><%= link_to 'Show', discussion_view %></td>
+        <td><%= link_to 'Edit', edit_discussion_view_path(discussion_view) %></td>
+        <td><%= link_to 'Destroy', discussion_view, method: :delete, data: { confirm: 'Are you sure?' } %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<br>
+
+<%= link_to 'New Discussion view', new_discussion_view_path %>

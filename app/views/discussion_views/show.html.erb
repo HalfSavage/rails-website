@@ -1,0 +1,19 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <strong>Post:</strong>
+  <%= @discussion_view.post %>
+</p>
+
+<p>
+  <strong>Member:</strong>
+  <%= @discussion_view.member %>
+</p>
+
+<p>
+  <strong>Tally:</strong>
+  <%= @discussion_view.tally %>
+</p>
+
+<%= link_to 'Edit', edit_discussion_view_path(@discussion_view) %> |
+<%= link_to 'Back', discussion_views_path %>
