@@ -15,13 +15,6 @@ class Forum < ActiveRecord::Base
     self.slug = name.parameterize if (self.slug.nil?)
   end 
 
-  def set_defaults 
-    self.is_active = true if (self.is_active.nil?)
-    self.is_moderator_only = false if (self.is_moderator_only.nil?)
-    self.is_visible_to_public = true if (self.is_visible_to_public.nil?)
-    self.is_paid_member_only = true if (self.is_paid_member_only.nil?)
-  end 
-
   def trending_tags
     Tag.trending_in_forum(id)
   end 
