@@ -3,7 +3,7 @@ source 'https://rubygems.org'
 gem 'devise', '>= 3.2.0'
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
-gem 'rails', '4.0.3'
+gem 'rails', '4.0.4'
 
 # Use postgresql as the database for Active Record
 gem 'pg'
@@ -36,11 +36,15 @@ end
 
 # gem 'less-rails' #Sprockets (what Rails 3.1 uses for its asset pipeline) supports LESS
 
-gem 'rails-console-tweaks'
+#gem 'rails-console-tweaks'
+gem 'hirb', :group => :development
+gem 'wirb', :group => :development
+gem 'irbtools', require: 'binding.repl', :group => :development
+
 
 # any gems in this group are only available
 # within the rails console
-gem 'irbtools', require: true, group: :development
+# gem 'irbtools', require: true, group: :development
 
 # Adds view support and advanced index support to migrations and schema dumps
 gem "schema_plus"
