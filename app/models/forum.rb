@@ -5,7 +5,6 @@ class Forum < ActiveRecord::Base
   has_many :posts, through: :forums_posts
   has_many :discussions
 
-  after_initialize :set_defaults, on: [:create]
   before_save :create_slug
 
   scope :active_public, -> { where(is_visible_to_public: true, is_active: true) } 
