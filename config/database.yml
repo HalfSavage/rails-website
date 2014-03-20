@@ -19,8 +19,8 @@ development:
   encoding: unicode
   database: halfsavage_development
   pool: 20
-  username: halfsavage
-  password: penisballs
+  username: postgres
+  password: shinji
   port: 5433
   host: localhost
 
@@ -50,8 +50,11 @@ test:
   encoding: unicode
   database: halfsavage_test
   pool: 5
-  username: halfsavage
-  password:
+  username: postgres
+  password: shinji
+  port: 5433
+  host: localhost
+
 
 production:
   adapter: postgresql
