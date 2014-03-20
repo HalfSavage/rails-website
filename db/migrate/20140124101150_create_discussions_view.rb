@@ -33,7 +33,6 @@ class CreateDiscussionsView < ActiveRecord::Migration
     SQL  
 
     execute <<-SQL
-      -- We call it "ForumThreads" and not "Threads" since "Thread" is a reserved keyword in Ruby
       create or replace view Discussions
       as
        SELECT f.name,
@@ -55,8 +54,7 @@ class CreateDiscussionsView < ActiveRecord::Migration
        JOIN forums f ON fp.forum_id = f.id
        JOIN members m ON p.member_id = m.id
        LEFT JOIN posts_last_replies_with_usernames plr ON p.id = plr.parent_id
-      WHERE p.parent_id IS NULL AND p.is_deleted = false
-      ORDER BY COALESCE(plr.created_at, p.created_at) DESC;
+      WHERE p.parent_id IS NULL AND p.is_deleted = false;
     SQL
 
 
