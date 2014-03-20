@@ -351,9 +351,9 @@ def create_forum_thread(markov_sentences, all_members, prolific_members, moderat
   begin
     post.save!
   rescue Exception => exp
-    print 'hm'
-    debugger
-    print 'hm'
+    #print 'hm'
+    #debugger
+    #print 'hm'
   end 
 
   # Generate views for this thread 
@@ -482,9 +482,10 @@ if (current_thread_count >= FAKE_MINIMUM_THREAD_COUNT) then
 else
   puts "Creating #{FAKE_MINIMUM_THREAD_COUNT - current_thread_count} threads."
   markov_sentences = get_markov_sentences
-    
+    # Splitting things up into threads didn't prove to be very effective.
+    # Maybe I'm doing something wrong!
     threads = []
-    1.upto(8) do 
+    1.upto(4) do 
       threads << Thread.new do  
         ActiveRecord::Base.connection_pool.with_connection do
           Thread.current['all_members'] = Member.all
