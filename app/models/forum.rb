@@ -3,7 +3,6 @@ class Forum < ActiveRecord::Base
   
   has_many :forums_posts
   has_many :posts, through: :forums_posts
-  #has_many :tag_trending_by_forums
   has_many :discussions
 
   after_initialize :set_defaults, on: [:create]
@@ -31,30 +30,30 @@ class Forum < ActiveRecord::Base
   # Returns nil if forum doesn't exist OR forum exists but is inactive OR the user doesn't have permissions
   def self.find_by_slug_for_member(member, slug) 
     # No particular member (for a non-authenticated user)
-    return Forum.where("is_active=true and is_visible_to_public=true and slug=?", slug).first if member.nil? || !member.is_active
+    return Forum.where("active=true and visible_to_public=true and slug=?", slug).first if member.nil? || !member.is_active
 
     # Moderator (can see all active forums)
-    return Forum.where("is_active=true and slug=?", slug).first if member.is_moderator 
+    return Forum.where("active=true and slug=?", slug).first if member.is_moderator 
 
     # Regular user (can see all non-mod forums)
     # TODO: differentiate between paid and non-paid users
-    return Forum.where("is_active=true and is_moderator_only!=true and slug=?", slug).first
+    return Forum.where("active=true and moderator_only!=true and slug=?", slug).first
   end 
 
   def self.all_for_member(member) 
     # No particular member (for a non-authenticated user)
-    return Forum.where("is_active=true and is_visible_to_public=true").order("display_order") if member.nil? || !member.is_active
+    return Forum.where("active=true and visible_to_public=true").order("display_order") if member.nil? || !member.is_active
 
     # Moderator (can see all active forums)
-    return Forum.where("is_active=true").order("display_order") if member.is_moderator 
+    return Forum.where("active=true").order("display_order") if member.is_moderator 
 
     # Regular user (can see all non-mod forums)
     # TODO: differentiate between paid and non-paid users
-    return Forum.where("is_active=true and is_moderator_only!=true").order("display_order") 
+    return Forum.where("active=true and moderator_only!=true").order("display_order") 
   end
 
   def self.default_forum() 
-    Forum.where('is_default=true and is_active=true').order('display_order').first
+    Forum.where('default_forum=true and active=true').order('display_order').first
   end 
 
   def self.find_by_slug(slug)
