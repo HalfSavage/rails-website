@@ -1,0 +1,19 @@
+one:
+  forum: public_forum
+  post: thread_one
+
+two:
+  forum: public_forum
+  post: thread_two
+
+three:
+  forum: public_forum
+  post: thread_three
+
+four:
+  forum: public_forum2
+  post: thread_three
+
+five:
+  forum: public_forum2
+  post: thread_four

@@ -1,21 +1,93 @@
 # Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
-one:
-  thread_id: 1
-  member_id: 1
-  reply_to_post_id: 1
-  is_deleted: false
-  is_public_moderator_voice: false
-  is_private_moderator_voice: false
-  body: false
-  marked_as_answer: 2013-11-02 19:38:18
+thread_one:
+  member: albert
+  deleted: false
+  public_moderator_voice: false
+  private_moderator_voice: false
+  body: aasdhc sjdh cjahsc sadcjdsk cjashd ckjashd ckjahsd cjhads cjhs 
 
-two:
-  thread_id: 1
-  member_id: 1
-  reply_to_post_id: 1
-  is_deleted: false
-  is_public_moderator_voice: false
-  is_private_moderator_voice: false
-  body: false
-  marked_as_answer: 2013-11-02 19:38:18
+thread_two:
+  member: beth
+  deleted: false
+  public_moderator_voice: false
+  private_moderator_voice: false
+  body: aasdhc sjdh cjahsc sadcjdsk cjashd ckjashd ckjahsd cjhads cjhs 
+
+thread_three:
+  member: edgar
+  deleted: false
+  public_moderator_voice: false
+  private_moderator_voice: false
+  body: aasdhc sjdh cjahsc sadcjdsk cjashd ckjashd ckjahsd cjhads cjhs 
+
+thread_four:
+  member: frida
+  deleted: false
+  public_moderator_voice: false
+  private_moderator_voice: false
+  body: aasdhc sjdh cjahsc sadcjdsk cjashd ckjashd ckjahsd cjhads cjhs 
+
+reply0:
+  member: beth 
+  parent: thread_one
+  deleted: false
+  public_moderator_voice: false
+  private_moderator_voice: false
+  body: askdjcksajdnckjasdncskjad cksadjcjnkasj dcskajdncjkdsc ckj fkdj vdfkjv 
+
+reply1:
+  member: beth 
+  parent: thread_one
+  deleted: false
+  public_moderator_voice: false
+  private_moderator_voice: false
+  body: askdjcksajdnckjasdncskjad cksadjcjnkasj dcskajdncjkdsc ckj fkdj vdfkjv 
+
+reply2:
+  member: doug 
+  parent: thread_two
+  deleted: false
+  public_moderator_voice: false
+  private_moderator_voice: false
+  body: askdjcksajdnckjasdncskjad cksadjcjnkasj dcskajdncjkdsc ckj fkdj vdfkjv 
+
+reply3:
+  member: carrie 
+  parent: thread_one
+  deleted: false
+  public_moderator_voice: false
+  private_moderator_voice: false
+  body: askdjcksajdnckjasdncskjad cksadjcjnkasj dcskajdncjkdsc ckj fkdj vdfkjv 
+
+reply4:
+  member: beth 
+  parent: thread_two
+  deleted: false
+  public_moderator_voice: false
+  private_moderator_voice: false
+  body: askdjcksajdnckjasdncskjad cksadjcjnkasj dcskajdncjkdsc ckj fkdj vdfkjv 
+
+reply5:
+  member: doug 
+  parent: thread_two
+  deleted: false
+  public_moderator_voice: false
+  private_moderator_voice: false
+  body: askdjcksajdnckjasdncskjad cksadjcjnkasj dcskajdncjkdsc ckj fkdj vdfkjv 
+
+reply6:
+  member: edgar 
+  parent: thread_two
+  deleted: false
+  public_moderator_voice: false
+  private_moderator_voice: false
+  body: askdjcksajdnckjasdncskjad cksadjcjnkasj dcskajdncjkdsc ckj fkdj vdfkjv 
+
+reply7:
+  member: beth 
+  parent: thread_three
+  deleted: false
+  public_moderator_voice: false
+  private_moderator_voice: false
+  body: askdjcksajdnckjasdncskjad cksadjcjnkasj dcskajdncjkdsc ckj fkdj vdfkjv 

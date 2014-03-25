@@ -8,13 +8,13 @@ class ForumsController < ApplicationController
     redirect_to controller: 'forums', action: 'show', id: Forum.default_forum.slug
   end
 
-  # GET /forums/1
-  # GET /forums/1.json
-  def show  
-    if (@forum = Forum.find_by_slug(params[:id]).first)
-      @special_forums = Forum.special_forums
-      @forums = Forum.all_for_member(current_member)
-      @discussions = @forum.discussions.page(params[:page])
+  # GET /forums/foo
+  def show
+    @special_forums = Forum.special
+    @forums = Forum.regular_for_member(current_member)
+
+    if (@forum = Forum.find_by_slug(params[:id]).first)  
+      @discussions = @forum.active_discussions_for_member(current_member)
     end
   end
 

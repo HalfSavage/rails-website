@@ -1,15 +1,103 @@
 # Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
-one:
-  name: MyString
-  is_active: false
-  is_moderator_only: false
-  is_visible_to_public: false
-  is_paid_member_only: false
+public_forum:
+  name: PublicForum
+  active: true
+  moderator_only: false
+  visible_to_public: true
+  paid_member_only: false
+  special: false
 
-two:
-  name: MyString
-  is_active: false
-  is_moderator_only: false
-  is_visible_to_public: false
-  is_paid_member_only: false
+public_forum2:
+  name: PublicForum2
+  active: true
+  moderator_only: false
+  visible_to_public: true
+  paid_member_only: false
+  special: false
+
+paid_forum:
+  name: PaidForum
+  active: true
+  moderator_only: false
+  visible_to_public: false
+  paid_member_only: true
+  special: false
+
+mod_forum:
+  name: ModForum
+  active: true
+  moderator_only: true
+  visible_to_public: false
+  paid_member_only: true
+  special: false
+
+member_only_forum:
+  name: Members Only Forum
+  active: true
+  moderator_only: false
+  visible_to_public: false
+  paid_member_only: false
+  special: false
+
+inactive_forum:
+  name: Inactive Forum
+  active: false
+  moderator_only: false
+  visible_to_public: true
+  paid_member_only: false
+  special: false
+
+special_all_forum:
+  name: All Forum (Special)
+  active: true
+  moderator_only: false
+  visible_to_public: true
+  paid_member_only: false
+  special: true 
+  slug: all
+
+special_most_active_forum:
+  name: Most Active Forum (Special)
+  active: true
+  moderator_only: false
+  visible_to_public: true
+  paid_member_only: false
+  special: true 
+  slug: most-active
+
+special_created_by_forum:
+  name: Created By Member Forum (Special)
+  active: true
+  moderator_only: false
+  visible_to_public: true
+  paid_member_only: false
+  special: true 
+  slug: created-by-member
+
+special_recently_viewed_forum:
+  name: Most Recently Viewed Forum (Special)
+  active: true
+  moderator_only: false
+  visible_to_public: true
+  paid_member_only: false
+  special: true 
+  slug: recently-viewed-by-member
+
+special_newest_forum:
+  name: Newest Disc. Forum (Special)
+  active: true
+  moderator_only: false
+  visible_to_public: true
+  paid_member_only: false
+  special: true 
+  slug: newest
+
+special_active_friends_forum:
+  name: Friends Active (Special)
+  active: true
+  moderator_only: false
+  visible_to_public: true
+  paid_member_only: false
+  special: true 
+  slug: active-with-friends-of-member

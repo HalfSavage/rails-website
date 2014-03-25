@@ -15,7 +15,6 @@ class Post < ActiveRecord::Base
   before_save :create_slug
   before_save :check_if_tags_need_to_be_deleted
   after_save :update_tags
-  after_initialize :set_defaults, on: [:create]
 
   # TODO: Validate subject length BUT only if parent post (replies don't need subjects)
   # validates :subject, length: {minimum: 5, maximum: 200}
@@ -72,12 +71,6 @@ class Post < ActiveRecord::Base
         PostTag.create!({tag: tag, post: self, created_at: self.created_at})
       end 
     }
-  end 
-
-  def set_defaults
-    self.is_deleted = false if (self.is_deleted.nil?)
-    self.is_public_moderator_voice = false if (self.is_public_moderator_voice.nil?)
-    self.is_private_moderator_voice = false if (self.is_private_moderator_voice.nil?)
   end 
 
   def is_thread?

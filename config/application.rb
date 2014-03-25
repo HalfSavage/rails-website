@@ -40,5 +40,7 @@ module Halfsavage
     # ref: http://stackoverflow.com/questions/2997179/ror-devise-sign-in-with-username-or-email
     # also ref: https://github.com/plataformatec/devise/wiki/How-To%3a-Allow-users-to-sign-in-using-their-username-or-email-address
     config.authentication_keys = [ :email, :username ]
+
+    config.autoload_paths += %W(#{config.root}/lib)
   end
 end

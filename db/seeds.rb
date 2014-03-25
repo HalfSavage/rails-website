@@ -135,10 +135,10 @@ FORUM_SPECIFIC_HASHTAGS = {
 def seed_forums
   puts "Seeding forums..."
   forums = [
-    {name: 'General Bullshit', display_order: 10, is_default: true},
+    {name: 'General Bullshit', display_order: 10, default_forum: true},
     {name: 'Events', display_order: 20},
     {name: 'Look What I Made', display_order: 30},
-    {name: 'Sex & Relationships', display_order: 40, is_visible_to_public: false},
+    {name: 'Sex & Relationships', display_order: 40, visible_to_public: false},
     {name: 'Video Games', display_order: 50},
     {name: 'Tabletop Gaming', display_order: 60},
     {name: 'Cooking, Baking, Dining', display_order: 70},
@@ -153,8 +153,14 @@ def seed_forums
     {name: 'Health & Fitness', display_order: 160},
     {name: 'Suggest New Forum', display_order: 170},
     {name: 'Site Issues / Meta', display_order: 180},
-    {name: 'Moderator Discussion', display_order: 999, is_visible_to_public: false, is_moderator_only: true},
-    {name: 'Inactive Forum', display_order: 999, is_active: false}
+    {name: 'Moderator Discussion', display_order: 999, visible_to_public: false, moderator_only: true},
+    {name: 'Inactive Forum', display_order: 999, active: false},
+    {name: 'Most Active Discussions', display_order: 1000, special: true, slug: 'most-active'},
+    {name: 'All Discussions', display_order: 1010, special: true, slug: 'all'},
+    {name: 'Discussions You Created', display_order: 1020, special: true, slug: 'created-by-member'},
+    {name: 'Recently Viewed', display_order: 1030, special: true, slug: 'recently-viewed-by-member' },
+    {name: 'Newest Discussions', display_order: 1040, special: true, slug: 'newest' },
+    {name: 'Your Friends', display_order: 1050, special: true, slug: 'active-with-friends-of-member'}
   ]
 
   forums.each { |f|
@@ -222,8 +228,8 @@ def create_private_message(hs_messages, earliest_possible_message_time, latest_p
     new_message.seen = rand(new_message.created_at..Time.now)
   end
 
-  if new_message.member_from.is_moderator and rand(2)==0 then 
-    new_message.is_moderator_voice = true
+  if new_message.member_from.moderator? and rand(2)==0 then 
+    new_message.moderator_voice = true
   end 
 
   if !new_message.valid? then 
@@ -246,11 +252,11 @@ def create_moderators(number_of_mods_desired)
   puts "#{number_of_mods} mods in database; minimum desired is #{MINIMUM_NUMBER_OF_MODS}."
   if (number_of_mods) < MINIMUM_NUMBER_OF_MODS then
     print "Making #{MINIMUM_NUMBER_OF_MODS - number_of_mods} moderators... "
-    new_mods = Member.where(!:is_moderator).order("RANDOM()").take(MINIMUM_NUMBER_OF_MODS - number_of_mods)
+    new_mods = Member.where(!:moderator).order("RANDOM()").take(MINIMUM_NUMBER_OF_MODS - number_of_mods)
     new_mods.each { |m|
       print "#{m.username} "
       if (m.valid?)
-        m.update(is_moderator: true)
+        m.update(moderator: true)
       else
         puts "\nMember can't be saved."
         puts m
@@ -334,7 +340,7 @@ def create_forum_thread(markov_sentences, all_members, prolific_members, moderat
 
   # Choose forum. Some (not many) posts will be in more than one forum
   # If it's a mod, maybe they're posting in the mod forum?
-  if post.member.is_moderator then
+  if post.member.moderator? then
     post.forums << (public_forums + mod_forums).sample([1,1,1,1,1,1,1,1,2].sample)
   else
     post.forums << public_forums.sample([1,1,1,1,1,1,1,1,2].sample)
@@ -351,9 +357,7 @@ def create_forum_thread(markov_sentences, all_members, prolific_members, moderat
   begin
     post.save!
   rescue Exception => exp
-    #print 'hm'
-    #debugger
-    #print 'hm'
+
   end 
 
   # Generate views for this thread 
@@ -393,12 +397,12 @@ def create_forum_thread(markov_sentences, all_members, prolific_members, moderat
     end
 
     # Some moderator replies should be in moderator voice
-    if reply.member.is_moderator then
+    if reply.member.moderator? then
       case rand(0..15)
       when 1
-        reply.is_public_moderator_voice = true
+        reply.public_moderator_voice = true
       when 2
-        reply.is_private_moderator_voice = true
+        reply.private_moderator_voice = true
       end
     end
 
@@ -459,10 +463,10 @@ current_moderator_count = Member.moderators.count
 if (current_moderator_count >= FAKE_MINIMUM_MOD_COUNT)
   puts "Okay, we have plenty of mods (#{current_moderator_count} of #{FAKE_MINIMUM_MOD_COUNT}). Moving along."
 else
-  some_losers = Member.where("is_moderator=false").order("RANDOM()").take(FAKE_MINIMUM_MOD_COUNT - current_moderator_count)
+  some_losers = Member.where("moderator=false").order("RANDOM()").take(FAKE_MINIMUM_MOD_COUNT - current_moderator_count)
   print "\nMaking #{some_losers.count} into mods... "
   some_losers.each { |loser| 
-    loser.is_moderator = true
+    loser.moderator = true
     loser.save!
   }
   puts "done"

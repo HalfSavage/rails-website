@@ -1,11 +1,11 @@
 # Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
 one:
-  member_id: 
-  member_id: 
-  tally: 1
+  member: albert
+  viewed_member: beth 
+  tally: 10
 
 two:
-  member_id: 
-  member_id: 
-  tally: 1
+  member: beth
+  viewed_member: albert 
+  tally: 50

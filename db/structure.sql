@@ -80,8 +80,8 @@ CREATE FUNCTION discussions_active_friends(member_id integer) RETURNS TABLE(name
             p.member_id = r.related_member_id 
             and r.member_id=$1
             and r.friend='t'
-            and p.is_deleted='f'
-            and p.is_private_moderator_voice='f'
+            and p.deleted='f'
+            and p.private_moderator_voice='f'
             and p.created_at >= current_date - interval '7 days'
           inner join members m on 
             p.member_id = m.id
@@ -201,12 +201,13 @@ CREATE TABLE forums (
     active boolean DEFAULT true,
     moderator_only boolean DEFAULT false,
     visible_to_public boolean DEFAULT true,
-    paid_member_only boolean DEFAULT true,
+    paid_member_only boolean DEFAULT false,
     created_at timestamp without time zone,
     updated_at timestamp without time zone,
     display_order integer,
     slug character varying(255),
-    default_forum boolean
+    default_forum boolean,
+    special boolean DEFAULT false
 );
 
 
@@ -261,14 +262,14 @@ CREATE TABLE members (
 
 CREATE TABLE posts (
     id integer NOT NULL,
-    member_id integer,
+    member_id integer NOT NULL,
     parent_id integer,
-    is_deleted boolean,
-    is_public_moderator_voice boolean,
-    is_private_moderator_voice boolean,
-    body text,
+    deleted boolean DEFAULT false NOT NULL,
+    public_moderator_voice boolean DEFAULT false NOT NULL,
+    private_moderator_voice boolean DEFAULT false NOT NULL,
+    body text NOT NULL,
     marked_as_answer timestamp without time zone,
-    created_at timestamp without time zone,
+    created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone,
     subject character varying(255),
     thread_id integer,
@@ -291,7 +292,7 @@ CREATE VIEW posts_last_replies_with_usernames AS
             p.created_at, 
             p.member_id
            FROM posts p
-          WHERE (((p.parent_id IS NOT NULL) AND (p.is_deleted = false)) AND (p.is_private_moderator_voice = false))) p_last_replies
+          WHERE (((p.parent_id IS NOT NULL) AND (p.deleted = false)) AND (p.private_moderator_voice = false))) p_last_replies
    JOIN members m ON ((p_last_replies.member_id = m.id)))
   WHERE (p_last_replies.reply_number = 1);
 
@@ -312,7 +313,7 @@ CREATE VIEW discussions AS
     m.username, 
     ( SELECT count(1) AS count
            FROM posts preply
-          WHERE ((preply.parent_id = p.id) AND (preply.is_deleted = false))) AS reply_count, 
+          WHERE ((preply.parent_id = p.id) AND (preply.deleted = false))) AS reply_count, 
     plr.created_at AS reply_created_at, 
     plr.username AS reply_username, 
     ''::text AS usernames, 
@@ -322,7 +323,7 @@ CREATE VIEW discussions AS
    JOIN forums f ON ((fp.forum_id = f.id)))
    JOIN members m ON ((p.member_id = m.id)))
    LEFT JOIN posts_last_replies_with_usernames plr ON ((p.id = plr.parent_id)))
-  WHERE ((p.parent_id IS NULL) AND (p.is_deleted = false));
+  WHERE ((p.parent_id IS NULL) AND (p.deleted = false));
 
 
 --
@@ -337,8 +338,21 @@ CREATE VIEW discussions_active AS
             ELSE ((1)::double precision + ((100.0)::double precision / ((date_part('epoch'::text, now()) - date_part('epoch'::text, p.created_at)) / (7200.0)::double precision)))
         END) AS score
    FROM posts p
-  WHERE ((((p.created_at >= (('now'::text)::date - '7 days'::interval)) AND (p.is_deleted = false)) AND (p.is_public_moderator_voice = false)) AND (p.is_private_moderator_voice = false))
+  WHERE ((((p.created_at >= (('now'::text)::date - '7 days'::interval)) AND (p.deleted = false)) AND (p.public_moderator_voice = false)) AND (p.private_moderator_voice = false))
   GROUP BY COALESCE(p.parent_id, p.id);
+
+
+--
+-- Name: discussions_fast; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW discussions_fast AS
+ SELECT fp.forum_id, 
+    p.id, 
+    p.member_id
+   FROM (posts p
+   JOIN forums_posts fp ON ((p.id = fp.post_id)))
+  WHERE ((p.parent_id IS NULL) AND (p.deleted = false));
 
 
 --
@@ -540,7 +554,7 @@ CREATE TABLE messages (
     updated_at timestamp without time zone,
     deleted_by_sender timestamp without time zone,
     deleted_by_recipient timestamp without time zone,
-    is_moderator_voice boolean
+    moderator_voice boolean
 );
 
 
@@ -632,24 +646,6 @@ ALTER SEQUENCE post_actions_id_seq OWNED BY post_actions.id;
 
 
 --
--- Name: post_last_replies; Type: VIEW; Schema: public; Owner: -
---
-
-CREATE VIEW post_last_replies AS
- SELECT p_last_replies.reply_number, 
-    p_last_replies.parent_id, 
-    p_last_replies.created_at, 
-    p_last_replies.member_id
-   FROM ( SELECT row_number() OVER (PARTITION BY p.parent_id ORDER BY p.created_at DESC) AS reply_number, 
-            p.parent_id, 
-            p.created_at, 
-            p.member_id
-           FROM posts p
-          WHERE (((p.parent_id IS NOT NULL) AND (p.is_deleted = false)) AND (p.is_private_moderator_voice = false))) p_last_replies
-  WHERE (p_last_replies.reply_number = 1);
-
-
---
 -- Name: post_tags; Type: TABLE; Schema: public; Owner: -; Tablespace: 
 --
 
@@ -694,7 +690,7 @@ CREATE VIEW posts_last_replies AS
             p.created_at, 
             p.member_id
            FROM posts p
-          WHERE (((p.parent_id IS NOT NULL) AND (p.is_deleted = false)) AND (p.is_private_moderator_voice = false))) p_last_replies
+          WHERE (((p.parent_id IS NOT NULL) AND (p.deleted = false)) AND (p.private_moderator_voice = false))) p_last_replies
   WHERE (p_last_replies.reply_number = 1);
 
 
@@ -1213,14 +1209,14 @@ CREATE INDEX index_relationships_on_related_member_id ON relationships USING btr
 -- Name: ix_posts_discussions; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
-CREATE INDEX ix_posts_discussions ON posts USING btree (parent_id, is_deleted, member_id, created_at DESC, updated_at, subject, id);
+CREATE INDEX ix_posts_discussions ON posts USING btree (parent_id, deleted, member_id, created_at DESC, updated_at, subject, id);
 
 
 --
 -- Name: ix_posts_discussions_active; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
-CREATE INDEX ix_posts_discussions_active ON posts USING btree (created_at DESC, is_deleted, is_public_moderator_voice, is_private_moderator_voice, parent_id, id);
+CREATE INDEX ix_posts_discussions_active ON posts USING btree (created_at DESC, deleted, public_moderator_voice, private_moderator_voice, parent_id, id);
 
 
 --
@@ -1234,7 +1230,7 @@ CREATE INDEX post_actions_post_id_etc ON post_actions USING btree (post_id, post
 -- Name: posts_idx_for_last_replies; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
-CREATE INDEX posts_idx_for_last_replies ON posts USING btree (parent_id, created_at DESC, is_deleted, is_private_moderator_voice, member_id);
+CREATE INDEX posts_idx_for_last_replies ON posts USING btree (parent_id, created_at DESC, deleted, private_moderator_voice, member_id);
 
 
 --
@@ -1454,3 +1450,7 @@ INSERT INTO schema_migrations (version) VALUES ('20140320023321');
 INSERT INTO schema_migrations (version) VALUES ('20140320024338');
 
 INSERT INTO schema_migrations (version) VALUES ('20140320024806');
+
+INSERT INTO schema_migrations (version) VALUES ('20140320045856');
+
+INSERT INTO schema_migrations (version) VALUES ('20140320170014');

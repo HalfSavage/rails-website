@@ -1,5 +1,6 @@
 class Member < ActiveRecord::Base
   attr_accessor :login
+  attr_accessor :paid
 
   # Include default devise modules. Others available are:
   # :confirmable, :lockable, :timeoutable and :omniauthable
@@ -32,5 +33,32 @@ class Member < ActiveRecord::Base
       where(conditions).first
     end
   end
+ 
+  def paid?
+    # Obviously, this code is just a placeholder until we have some kind of real payment system or whatever
+    return true if @paid.nil?
+    @paid
+  end 
 
+  def unpaid?
+    !paid?
+  end 
+
+  def not_moderator?
+    return !moderator?
+  end 
+
+  def not_supermoderator?
+    return !supermoderator
+  end 
+
+  def inactive?
+    return !active 
+  end
+
+  # For cached global objects whose content depends on their entitlements
+  # Most obvious example is the forum list on the left side of the forums
+  def member_entitlements_cache_key
+    "#{banned?}_#{active?}_#{paid?}_#{moderator?}_#{supermoderator?}"
+  end 
 end

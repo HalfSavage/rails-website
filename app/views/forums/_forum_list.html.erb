@@ -1,0 +1,28 @@
+<%
+# The forums they'll see will depend on their member permissions - paid, banned, active, moderator, etc.
+cache_key = current_member.nil? ? "unauthenticated" : current_member.member_entitlements_cache_key
+%>
+	<ul>
+	<% cache("special_forums_" + cache_key, :expires_in => 1.hour) do 
+		@special_forums.each do |f| %>
+		<li><a href="/forums/<%=f.slug%>"><%=f.name%></a></li>
+		<% end
+	end %>
+	</ul>
+	<ul>
+	<% cache("forums_" + cache_key, :expires_in => 1.hour) do
+		@forums.each do |f| %>
+		<li><a href="/forums/<%=f.slug%>"><%=f.name%></a></li>
+		<% end  
+	end %>
+	</ul>
+	<ul>
+	<% cache("tags_trending_global_" + cache_key, :expires_in => 10.minutes) do 
+		Tag.trending.take(7).each do |tt| %>
+		<li><a href="/tags/<%=tt.tag_text%>">#<%=tt.tag_text%></a></li>
+		<% end 
+	end %>
+	</ul>
+	<p>
+		<small>key: <%=cache_key%></small>
+	</p>

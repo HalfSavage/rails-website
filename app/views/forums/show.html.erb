@@ -1,27 +1,6 @@
 
 <div id="forum-list">
-	<ul>
-	<% @special_forums.each_pair { |slug,name| %>
-		<li><a href="/forums/<%=slug%>"><%=name%></a></li>
-
-	<% } %>
-	</ul>
-	<ul>
-	<% cache("forums", :expires_in => 1.hour) do
-		@forums.each do |f| %>
-		<li><a href="/forums/<%=f.slug%>"><%=f.name%></a></li>
-		<% end  
-	end %>
-	</ul>
-	<ul>
-	<% cache("tags_trending_global", :expires_in => 10.minutes) do 
-		Tag.trending.take(7).each do |tt| %>
-		<li><a href="/tags/<%=tt.tag_text%>">#<%=tt.tag_text%></a></li>
-		<% end 
-	end %>
-	</ul>
-
-
+	<%= render "forum_list" %>
 </div>
 
 <div id="discussions">
@@ -40,10 +19,13 @@
 			</p>
 		<% end
 	end 
+	scope = @discussions 
+
+	@poop = scope.paginate(page: params[:page], total_entries: @forum.active_discussion_count_for_member(current_member)) 
 	%>
-	<%= will_paginate @discussions, renderer: BootstrapPagination::Rails %>
+	<%= will_paginate @poop, inner_window: 2, renderer: BootstrapPagination::Rails %>
 	<% 
-		@discussions.each { |d| %>
+		@poop.each { |d| %>
 		<div class="discussion">
 		<h4><%=d.subject%>  <small><i class="fa fa-comment-o"></i> <%=d.reply_count%></small> </h4> 
 		<p>
