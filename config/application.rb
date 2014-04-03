@@ -1,5 +1,7 @@
 require File.expand_path('../boot', __FILE__)
 
+MAX_TAGS_PER_POST = 10
+
 require 'rails/all'
 
 # Require the gems listed in Gemfile, including any gems
@@ -42,5 +44,6 @@ module Halfsavage
     config.authentication_keys = [ :email, :username ]
 
     config.autoload_paths += %W(#{config.root}/lib)
+
   end
 end
