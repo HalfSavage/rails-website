@@ -33,7 +33,7 @@ beth:
   email: beth@halfsavage.com
 
 banned_member:
-  username: FailureFreddit
+  username: FailureFreddy
   first_name: Freddy
   last_name: Failure
   referred_by_id: 
@@ -47,6 +47,22 @@ banned_member:
   true_successor_to_hokuto_no_ken: false
   visible_to_non_members: true
   email: bannedmember@halfsavage.com
+
+inactive_member:
+  username: InactiveIndia
+  first_name: India
+  last_name: Inactive
+  referred_by_id: 
+  date_of_birth: 1983-11-02 19:28:58
+  gender_id: 1
+  active: false
+  moderator: false
+  supermoderator: false
+  banned: false 
+  vip: false
+  true_successor_to_hokuto_no_ken: false
+  visible_to_non_members: true
+  email: inactivemember@halfsavage.com
 
 manny_moderator:
   username: Manny

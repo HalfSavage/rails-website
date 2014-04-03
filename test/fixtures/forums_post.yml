@@ -17,3 +17,15 @@ four:
 five:
   forum: public_forum2
   post: thread_four
+
+mod_forum_forum_post:
+  forum: mod_forum
+  post: mod_forum_thread
+
+mod_and_public1:
+  forum: mod_forum 
+  post: mod_and_public_forum_thread
+
+mod_and_public2: 
+  forum: public_forum
+  post: mod_and_public_forum_thread

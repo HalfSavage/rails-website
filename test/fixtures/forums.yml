@@ -1,4 +1,5 @@
-# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+# Don't mess about with the properties on any of the existing objects, or you will break a lot of tests.
+# Make new ones instead!
 
 public_forum:
   name: PublicForum

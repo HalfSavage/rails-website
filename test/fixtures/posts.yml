@@ -1,4 +1,5 @@
-# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+# Don't mess about with the properties on any of the existing objects, or you will break a lot of tests.
+# Make new ones instead!
 
 thread_one:
   member: albert
@@ -9,6 +10,20 @@ thread_one:
 
 thread_two:
   member: beth
+  deleted: false
+  public_moderator_voice: false
+  private_moderator_voice: false
+  body: aasdhc sjdh cjahsc sadcjdsk cjashd ckjashd ckjahsd cjhads cjhs 
+
+mod_forum_thread:
+  member: manny_moderator
+  deleted: false
+  public_moderator_voice: false
+  private_moderator_voice: false
+  body: aasdhc sjdh cjahsc sadcjdsk cjashd ckjashd ckjahsd cjhads cjhs 
+
+mod_and_public_forum_thread: 
+  member: manny_moderator
   deleted: false
   public_moderator_voice: false
   private_moderator_voice: false
