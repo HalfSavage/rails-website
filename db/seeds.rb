@@ -385,18 +385,24 @@ def create_forum_thread(markov_sentences, all_members, prolific_members, moderat
   (1..num_replies).each { |j|
     reply = Post.new( { parent: post } )
 
-    # Like above, 50% of the posts will come from the prolific members
-    # TODO: Only pick members whose accounts were created after this thread was made
-    if rand(0..100) < 50
-      eligible_members = prolific_members.select {|pm| pm.created_at > post.created_at}
-      reply.member = eligible_members.sample
-    end
+    if post.only_in_moderator_forums? 
+      # If the thread can only be posted to by moderators, we obviously need to choose from moderators
+      reply.member = moderators.sample
+    else 
+      # Like above, 50% of the posts will come from the prolific members
+      # TODO: Only pick members whose accounts were created after this thread was made
+      if rand(0..100) < 50
+        eligible_members = prolific_members.select {|pm| pm.created_at > post.created_at}
+        reply.member = eligible_members.sample
+      end
+    end 
 
+    # Err... punt? This really shouldn't happen!
     if reply.member.nil?
       reply.member = all_members.sample
     end
 
-    # Some moderator replies should be in moderator voice
+    # Some (not many) moderator replies should be in moderator voice
     if reply.member.moderator? then
       case rand(0..15)
       when 1
