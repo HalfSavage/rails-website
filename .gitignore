@@ -28,3 +28,5 @@ rebuild-tags.rb
 markov_dictionary.mmd
 
 config/database.yml
+
+config/database.yml
