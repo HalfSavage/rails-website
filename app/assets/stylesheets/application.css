@@ -25,6 +25,7 @@
 	float:left;
 	width: 70%;
 	margin-left: 2em;
+  font-size: 14px;
 	/*background-color: yellow;*/
 }
 
@@ -39,4 +40,44 @@
 
 #discussions .discussion h4 small {
 	color: #666;
+}
+
+#discussions h5 {
+  margin-bottom: 0.2em;
+}
+
+.pagination {
+  text-align: right;
+  float:right;
+}
+
+#discussions > div {
+  clear:both;
+}
+
+.discussion-quote {
+  white-space: nowrap;
+  overflow: hidden;
+  padding-bottom: 0;
+  margin-bottom: 0;
+  line-height: 1.3em;
+  font-size: 13px;
+  font-style: italic;
+}
+
+.discussion-quote-fade {
+  padding-top: 0;
+  margin-top: -1.3em;
+  background: linear-gradient(to right,
+    rgba(255,255,255,0) 0%,
+    rgba(255,255,255,0) 0%,
+    rgba(255,255,255,1) 70%,
+    rgba(255,255,255,1) 99%); /* W3C */
+  opacity: 0.5;
+  height: 1.3em;
+}
+
+#discussions
+#discussions .pagination {
+  font-size: 13px;
 }

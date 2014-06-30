@@ -1,0 +1,19 @@
+<div class="discussion" data-slug="<%=discussion.slug%>">
+  <h5><a href="/discussions/<%=discussion.slug%>"><%=discussion.subject%></a>
+
+  </h5>
+  <p class="discussion-quote text-muted">
+      &ldquo;<%=truncate(discussion.body, length:120, separator:' ', omission: '...')%>&rdquo;
+  </p>
+  <div class="discussion-quote-fade">
+
+  </div>
+  <p>
+    <span class="text-muted">posted by <%=member_link(discussion.username)%> <%= time_ago_in_words(discussion.created_at) %> ago</span>
+ <% if discussion.reply_count>0 -%>
+      <span class="text-muted" style="padding-left: 1em"><i class="fa fa-comment-o"></i>
+      <small><%= pluralize(discussion.reply_count, 'replies')%></small>
+    </span>
+ <% end -%>
+  </p>
+</div>

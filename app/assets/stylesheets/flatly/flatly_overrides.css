@@ -7,3 +7,56 @@ footer {
   color: #ccc;
 }
 
+h6 {
+	color: #999;
+	font-size: 11px;
+	text-transform: uppercase;
+
+}
+
+.fa-ul i.fa-li {
+	color: #777;
+}
+
+
+.pagination {
+  margin: 0.5em 0;
+}
+
+.pagination > li > a, .pagination > li > span {
+	color: #18BC9C;
+	background-color: transparent;
+  padding: 5px 7px
+}
+
+.pagination > li > a:hover,
+.pagination > li > span:hover,
+.pagination > .active > a,
+.pagination > .active > span,
+.pagination > .active > a:hover,
+.pagination > .active > span:hover,
+.pagination > .active > a:focus,
+.pagination > .active > span:focus {
+	border: 1px solid #18BC9C;
+  border-radius: 2px;
+	background: transparent;
+	color: #18BC9C;
+}
+
+.pagination > .disabled > span,
+.pagination > .disabled > span:hover,
+.pagination > .disabled > span:focus,
+.pagination > .disabled > a,
+.pagination > .disabled > a:hover,
+.pagination > .disabled > a:focus {
+    background: transparent;
+    color: #ccc;
+    cursor: not-allowed;
+}
+
+.tooltip-inner {
+  white-space: pre;
+  max-width: none;
+
+}
+

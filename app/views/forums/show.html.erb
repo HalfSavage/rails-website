@@ -1,3 +1,4 @@
+<% content_for :title, @forum.name %>
 
 <div id="forum-list">
 	<%= render "forum_list" %>
@@ -5,6 +6,8 @@
 
 <div id="discussions">
 	<h2>Forum: <%=@forum.name%></h2>
+
+
 	<%
 	cache(@forum, :expires_in => 10.minutes) do
 		trending_tags = @forum.trending_tags
@@ -13,33 +16,29 @@
 			<p>
 				Trending:
 				<% trending_tags.each do |tag| %>
-					<a href="/forums/@forum.id/tags/<%=tag.tag_text%>">#<%=tag.tag_text%></a> 
+					<a href="/forums/@forum.id/tags/<%=tag.tag_text%>">#<%=tag.tag_text%></a>
 
 				<% end %>
 			</p>
 		<% end
-	end 
-	scope = @discussions 
+	end
+	scope = @discussions
 
-	@poop = scope.paginate(page: params[:page], total_entries: @forum.active_discussion_count_for_member(current_member)) 
+	@these_discussions = scope.paginate(
+          page: params[:page],
+          total_entries: @forum.active_discussion_count_for_member(current_member),
+          per_page: Rails.configuration.forum_threads_per_page
+  )
 	%>
-	<%= will_paginate @poop, inner_window: 2, renderer: BootstrapPagination::Rails %>
-	<% 
-		@poop.each { |d| %>
-		<div class="discussion">
-		<h4><%=d.subject%>  <small><i class="fa fa-comment-o"></i> <%=d.reply_count%></small> </h4> 
-		<p>
-			<i>&ldquo;<%=truncate(d.body, length:120, separator:' ', omission: '...')%>&rdquo;</i><br>
-			<span class="text-muted">posted by <%=member_link(d.username)%> <%=time_ago_in_words(d.created_at)%> ago</span>
-		</p>
-		</div>
-
-	<% } %>
+	<%= will_paginate @these_discussions, inner_window: 2, renderer: BootstrapPagination::Rails %>
+	<%= render @these_discussions %>
+  <%= will_paginate @these_discussions, inner_window: 2, renderer: BootstrapPagination::Rails %>
 </div>
 
 <p id="notice"><%= notice %></p>
 
-<!--
-<%= link_to 'Edit', edit_forum_path(@forum) %> |
-<%= link_to 'Back', forums_path %>
--->
+<% content_for :page_bottom_script do %>
+<script>
+
+</script>
+<% end %>
