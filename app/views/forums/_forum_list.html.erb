@@ -2,27 +2,35 @@
 # The forums they'll see will depend on their member permissions - paid, banned, active, moderator, etc.
 cache_key = current_member.nil? ? "unauthenticated" : current_member.member_entitlements_cache_key
 %>
-	<ul>
-	<% cache("special_forums_" + cache_key, :expires_in => 1.hour) do 
-		@special_forums.each do |f| %>
-		<li><a href="/forums/<%=f.slug%>"><%=f.name%></a></li>
+	<h6>Smart Forums</h6>
+	<ul class="fa-ul">
+	<% cache("special_forums_" + cache_key, :expires_in => 1.hour) do
+		@special_forums.each do |f|
+      if current_member.nil? && f.invisible_to_public? %>
+		<li class="text-muted"><i class="fa-li fa fa-cog"></i><span data-toggle="tooltip" data-placement="right" title="Must be logged in"><%=f.name%></span></li>
+      <% else %>
+    <li><i class="fa-li fa fa-cog"></i><a href="/forums/<%=f.slug%>"><%=f.name%></a></li>
+		<% end
+     end
+	end %>
+	</ul>
+	<h6>Forums</h6>
+	<ul class="fa-ul">
+	<% cache("forums_" + cache_key, :expires_in => 1.hour) do
+		@forums.each do |f| %>
+		<li><i class="fa-li fa fa-caret-right"></i><a href="/forums/<%=f.slug%>"><%=f.name%></a></li>
 		<% end
 	end %>
 	</ul>
-	<ul>
-	<% cache("forums_" + cache_key, :expires_in => 1.hour) do
-		@forums.each do |f| %>
-		<li><a href="/forums/<%=f.slug%>"><%=f.name%></a></li>
-		<% end  
-	end %>
-	</ul>
-	<ul>
-	<% cache("tags_trending_global_" + cache_key, :expires_in => 10.minutes) do 
+	<h6>Trending</h6>
+	<ul class="fa-ul">
+	<% cache("tags_trending_global_" + cache_key, :expires_in => 10.minutes) do
 		Tag.trending.take(7).each do |tt| %>
-		<li><a href="/tags/<%=tt.tag_text%>">#<%=tt.tag_text%></a></li>
-		<% end 
+		<li><i class="fa-li fa fa-caret-right"></i><a href="/tags/<%=tt.tag_text%>">#<%=tt.tag_text%></a></li>
+		<% end
 	end %>
 	</ul>
 	<p>
 		<small>key: <%=cache_key%></small>
 	</p>
+a
