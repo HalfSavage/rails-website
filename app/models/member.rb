@@ -9,7 +9,7 @@ class Member < ActiveRecord::Base
 
   # Relations
   belongs_to :gender
-  belongs_to :referred_by, class_name: 'Member' 
+  belongs_to :referred_by, class_name: 'Member'
   has_many :referrals, class_name: 'Member', foreign_key: 'member_id_referred'
 
   # Validations
@@ -19,8 +19,9 @@ class Member < ActiveRecord::Base
   validates :date_of_birth, presence: true
   validates :username, length: { minimum: 5, maximum: 30}
 
+
   # Scopes
-  scope :moderators, -> { where(moderator: true) } 
+  scope :moderators, -> { where(moderator: true) }
   scope :supermoderators, -> { where(supermoderator: true) }
 
   # Have to override this to allow login by email OR username (Devise default is email only)
@@ -33,32 +34,33 @@ class Member < ActiveRecord::Base
       where(conditions).first
     end
   end
- 
+
   def paid?
     # Obviously, this code is just a placeholder until we have some kind of real payment system or whatever
     return true if @paid.nil?
     @paid
-  end 
+  end
 
   def unpaid?
     !paid?
-  end 
+  end
 
   def not_moderator?
-    return !moderator?
-  end 
+    !moderator?
+  end
 
   def not_supermoderator?
-    return !supermoderator
-  end 
+    !supermoderator
+  end
 
   def inactive?
-    return !active 
+    !active
   end
+
 
   # For cached global objects whose content depends on their entitlements
   # Most obvious example is the forum list on the left side of the forums
   def member_entitlements_cache_key
     "#{banned?}_#{active?}_#{paid?}_#{moderator?}_#{supermoderator?}"
-  end 
+  end
 end
