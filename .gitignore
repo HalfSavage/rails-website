@@ -19,14 +19,9 @@ pickle-email-*.html
 config/initializers/secret_token.rb
 /.idea
 
-
-
 # misc - added by booty
 rebuild-tags.rb
 .tags
 *.sublime-*
 markov_dictionary.mmd
-
-config/database.yml
-
 config/database.yml
