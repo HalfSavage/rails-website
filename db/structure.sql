@@ -364,19 +364,6 @@ CREATE VIEW discussions_active AS
 
 
 --
--- Name: discussions_fast; Type: VIEW; Schema: public; Owner: -
---
-
-CREATE VIEW discussions_fast AS
- SELECT fp.forum_id,
-    p.id,
-    p.member_id
-   FROM (posts p
-   JOIN forums_posts fp ON ((p.id = fp.post_id)))
-  WHERE ((p.parent_id=p.id) AND (p.deleted = false));
-
-
---
 -- Name: forum_moderators; Type: TABLE; Schema: public; Owner: -; Tablespace:
 --
 

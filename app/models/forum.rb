@@ -24,37 +24,6 @@ class Forum < ActiveRecord::Base
     raise MustBeModeratorException.new "This forum is inactive" if inactive? && member.not_moderator?
   end
 
-
-  # For times when we need a quick count of how many discussions are in a forum
-  # Calling "select count(*) from discussions_fast blah bla" is about 10x faster than doing
-  # "select count(*) from discussions", which is what happens if you do "some_forum.active_discussions_for_member(some_mem).count"
-  def active_discussion_count_for_member(member = nil)
-    forum_permissions_check! member
-
-    # If it's a "special" forum, pull discussion from the appropriate place
-    if special?
-      case slug
-        when 'all'
-          return ActiveRecord::Base.connection.execute("select count(1) from discussions_fast;")[0]["count"].to_i
-        when 'most-active'
-          return ActiveRecord::Base.connection.execute("select count(1) from discussions_active;")[0]["count"].to_i
-        when 'created-by-member'
-          return ActiveRecord::Base.connection.execute("select count(1) from discussions_fast where member_id=#{member.id.to_i};")[0]["count"].to_i
-        when 'recently-viewed-by-member'
-          return ActiveRecord::Base.connection.execute("select count(1) from discussions_fast where id in (select post_id from discussion_views where member_id=#{member.id.to_i})")[0]["count"].to_i
-        when 'newest'
-          return ActiveRecord::Base.connection.execute("select count(1) from discussions_fast")[0]["count"].to_i
-        when 'active-with-friends-of-member'
-          # TODO: This is still really slow (100ms vs. 10ms like the others) because it's not really saving any "work" for the database
-          return ActiveRecord::Base.connection.execute("select count(1) from discussions_active_friends(#{member.id.to_i})")[0]["count"].to_i
-        else
-          raise Exception.new "Not sure how to handle the special forum '#{slug}'"
-      end
-    end
-
-    ActiveRecord::Base.connection.execute("select count(1) from discussions_fast where forum_id=#{id};")[0]["count"].to_i
-  end
-
   # member can be a member_id or a Member
   def active_discussions_for_member(member = nil)
     forum_permissions_check! member
