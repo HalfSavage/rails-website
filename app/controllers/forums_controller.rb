@@ -16,7 +16,7 @@ class ForumsController < ApplicationController
     if (@forum = Forum.find_by_slug(params[:id]).first)
       @discussions = @forum.active_discussions_for_member(current_member).paginate(
           page: params[:page],
-          per_page: Rails.configuration.forum_threads_per_page
+          per_page: Rails.configuration.discussions_per_page
       )
     end
     # TODO: display error if forum not found
