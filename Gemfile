@@ -55,10 +55,6 @@ gem 'quiet_assets', :group => :development
 gem 'will_paginate', '~> 3.0'
 gem 'will_paginate-bootstrap'
 
-#gem "composite_primary_keys", "~> 6.0.1"
-
-# The main branch doesn't support Arel 4.1 yet
-# ref: http://stackoverflow.com/questions/11023167/no-such-file-to-load-active-record-associations-has-and-belongs-to-many-associat
 gem 'composite_primary_keys', '~> 7.0.2'
 
 # gem 'debugger'
@@ -74,7 +70,9 @@ gem 'composite_primary_keys', '~> 7.0.2'
 # gem 'capistrano', group: :development
 
 # Use debugger
-gem 'byebug', group: [:development, :test]
+# gem 'byebug', group: [:development, :test]
 
 # Used in seeds.rb to generate thread and message content
 gem 'marky_markov', group: [:development, :test]
+
+gem 'thin'
