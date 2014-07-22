@@ -8,8 +8,9 @@ class Post < ActiveRecord::Base
 
   # Relations
   belongs_to :member
-  has_many :forums_posts, autosave: true
-  has_many :forums, -> { uniq },  through: :forums_posts  # see for explanation of uniq: http://stackoverflow.com/questions/16569994/deprecation-warning-when-using-has-many-through-uniq-in-rails-4
+  has_many :forums_posts #, autosave: true
+  # has_many :forums, -> { uniq },  through: :forums_posts  # see for explanation of uniq: http://stackoverflow.com/questions/16569994/deprecation-warning-when-using-has-many-through-uniq-in-rails-4
+  has_many :forums,  through: :forums_posts  # see for explanation of uniq: http://stackoverflow.com/questions/16569994/deprecation-warning-when-using-has-many-through-uniq-in-rails-4
   has_many :post_actions
 
   # TODO: add relation to PostTag and Tag (through PostTag)
