@@ -1,7 +1,133 @@
-# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+# Don't add any fixtures involving messages to or from Albert.
+# A number of the tests in message_test.rb depend on the number and order of
+# messages to/from Albert in fixtures one: through thirteen:
+
 
 one:
+  member_from: albert
+  member_to: beth 
+  message_type_id: 1
+  body: This is message one
+  created_at: 2014-06-27 19:28:58
+
+two:
+  member_from: beth
+  member_to: carrie 
+  message_type_id: 1
+  body: This is message two
+  created_at: 2014-06-26 19:28:58
+
+three:
+  member_from: carrie
+  member_to: doug 
+  message_type_id: 1
+  body: This is message three
+  created_at: 2014-06-25 19:28:58
+
+four:
+  member_from: doug
+  member_to: albert 
+  message_type_id: 1
+  body: This is message four
+  created_at: 2014-06-24 19:28:58
+
+five:
+  member_from: doug
+  member_to: beth 
+  message_type_id: 1
+  body: This is message five
+  created_at: 2014-06-23 19:28:58
+
+six:
+  member_from: doug
+  member_to: carrie 
+  message_type_id: 1
+  body: This is message six
+  created_at: 2014-06-22 19:28:58
+
+seven:
+  member_from: beth
+  member_to: carrie 
+  message_type_id: 1
+  body: This is message seven
+  created_at: 2014-06-21 19:28:58
+
+eight:
+  member_from: beth
+  member_to: albert 
+  message_type_id: 1
+  body: This is message eight
+  created_at: 2014-06-20 19:28:58
+
+nine:
+  member_from: carrie
   member_to: albert
+  message_type_id: 1
+  body: tThis is message nine
+  created_at: 2014-06-19 19:28:58
+
+ten:
+  member_from: carrie
+  member_to: albert 
+  message_type_id: 1
+  body: This is message ten
+  created_at: 2014-06-18 19:28:58
+
+eleven:
+  member_from: albert
+  member_to: beth 
+  message_type_id: 1
+  body: This is message eleven
+  created_at: 2014-06-17 19:28:58
+
+twelve:
+  member_from: beth
+  member_to: albert 
+  message_type_id: 1
+  body: This is message twelve
+  created_at: 2014-06-16 19:28:58
+
+thirteen:
+  member_from: beth
+  member_to: albert
+  message_type_id: 1
+  body: This is message thirteen
+  created_at: 2014-06-15 19:28:58
+
+message_deleted_by_sender:
   member_from: beth 
-  message_type_id: 
-  body: Lorem asdkj kasd ckja sdckj 
+  member_to: carrie 
+  message_type_id: 1
+  body: This is a message from Beth to Carrie that Beth deleted.
+  created_at: <%= Time.now %>
+  deleted_by_sender: <%= Time.now %>
+
+message_deleted_by_recipient: 
+  member_from: doug  
+  member_to: edgar 
+  message_type_id: 1
+  body: This is a message from Doug to Edgar that Edgar deleted.
+  created_at: <%= Time.now %>
+  deleted_by_recipient: <%= Time.now %>
+
+gerta_to_unpaid_guy:
+  member_from: gerta_to_unpaid_guy  
+  member_to: unpaid_guy 
+  message_type_id: 1
+  body: This is a message from Doug to Edgar that Edgar deleted.
+  created_at: <%= Time.now %>
+
+doug_to_unpaid_guy:
+  member_from: doug  
+  member_to: unpaid_guy 
+  message_type_id: 1
+  body: This is a message from Doug to Edgar that Edgar deleted.
+  created_at: <%= Time.now %>
+
+moderator_to_unpaid_guy: 
+  member_from: manny_moderator  
+  member_to: unpaid_guy
+  message_type_id: 1
+  body: This is a message from Doug to Edgar that Edgar deleted.
+  created_at: <%= Time.now %>
+  moderator_voice: true
