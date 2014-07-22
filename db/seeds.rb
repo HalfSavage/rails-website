@@ -8,7 +8,7 @@ require_relative 'seed_helpers/seed_member_generator'
 CREATE_FAKE_DATA = true
 
 # If there are less members than this, add enough members to get to this total
-FAKE_MINIMUM_MEMBERS_COUNT = 90#0
+FAKE_MINIMUM_MEMBERS_COUNT = 900
 
 # When we create a new fake member, their created_at will be set to
 # between 1 and FAKE_MAX_MEMBER_ACCOUNT_AGE_DAYS. (So it doesn't look like 158795 members)
@@ -20,6 +20,9 @@ FAKE_MAX_MEMBER_ACCOUNT_AGE_DAYS = 700
 # 1.0 = 100% chance of trying to populate the member_id_referred field
 # 0.0 = 0% chance of trying to populate the member_id_referred field
 FAKE_CHANCE_OF_MEMBER_BEING_REFERRED = 0.25
+
+# Percentage of fake members that will be paid members. 0.66 = 66% chance of each member being paid
+FAKE_CHANCE_OF_MEMBER_BEING_PAID = 0.66
 
 # If less than this many mods exist, we'll make this many members mods.
 FAKE_MINIMUM_MOD_COUNT = 25
@@ -52,7 +55,7 @@ MAX_POST_LENGTH_CHARACTERS = 8000
 MARKOV_SENTENCES_TO_GENERATE = 500
 
 # If there are less private messages than this, create enough private messages to get to this total
-MINIMUM_PRIVATE_MESSAGES_COUNT = 500
+MINIMUM_PRIVATE_MESSAGES_COUNT = 2000
 
 # These hashtags get inserted the most often. Some other words inside post bodies will get randomly
 # turned into hashtags too
@@ -194,7 +197,14 @@ end
 # Create Private Messages #
 ###########################
 
-def create_private_message(hs_messages, earliest_possible_message_time, latest_possible_message_time, should_be_reply_to_post)
+def create_private_message(hs_messages,
+  earliest_possible_message_time,
+  latest_possible_message_time,
+  should_be_reply_to_post,
+  num_replies,
+  id_from = nil,
+  id_to = nil)
+
   if should_be_reply_to_post
     post = Post.where('created_at > ? and created_at < ?', earliest_possible_message_time, latest_possible_message_time).order('RANDOM()').first
     message_created_at = rand([earliest_possible_message_time, post.created_at].min..latest_possible_message_time)
@@ -210,18 +220,25 @@ def create_private_message(hs_messages, earliest_possible_message_time, latest_p
   else
     message_created_at = rand(earliest_possible_message_time..latest_possible_message_time)
     # Get 2 members who created their accounts before this message
-    members = Member.where('created_at > ?', message_created_at).order('RANDOM()').take(2)
+    if (id_from==nil) || (id_to==nil)
+      members = Member.where('created_at > ?', message_created_at).order('RANDOM()').take(2)
+    end
+
+    id_from = id_from || members[0]
+    id_to = id_to || members[1]
 
     new_message = Message.new(
       # pick a time for this message to have been "created"...
       # ...random time between earliest_possible_message_time and right now
       :created_at => message_created_at,
       :message_type => MessageType.find(1),
-      :member_from => members[0],
-      :member_to => members[1],
+      :member_from => id_from,
+      :member_to => id_to,
       :body => hs_messages.get_private_message_body(1..5)
     )
   end
+
+  return nil if (new_message.member_from == nil) || (new_message.member_to == nil)
 
   # Roll the dice. Was this message seen, and when? (Most messages should be seen already)
   if rand(5)<4
@@ -232,6 +249,8 @@ def create_private_message(hs_messages, earliest_possible_message_time, latest_p
     new_message.moderator_voice = true
   end
 
+
+
   if new_message.invalid?
     puts "\nMessage can't be fucking saved!"
     puts new_message
@@ -239,6 +258,10 @@ def create_private_message(hs_messages, earliest_possible_message_time, latest_p
     puts '...sorry'
   else
     new_message.save
+    num_replies.times { |x|
+      print '.'
+      create_private_message hs_messages, message_created_at, Time.now, false, 0, id_to, id_from
+    }
   end
 end
 
@@ -327,7 +350,6 @@ def create_forum_thread(markov_sentences, all_members, prolific_members, moderat
     )
 
   post.save!
-
 
   # Generate views for this thread
   # TODO: This would be more "realistic" if views included all those who replied to it
@@ -432,7 +454,14 @@ else
     hs_usernames = HalfSavageUserNames.new if i % 50 == 0
     print "#{i}... " if i % 10 == 0
     ActiveRecord::Base.connection_pool.with_connection do
-      SeedMemberGenerator.generate( hs_usernames, [male, male, male, female, female, female, complicated].sample, FAKE_MEMBER_MIN_AGE_YEARS, FAKE_MEMBER_MAX_AGE_YEARS, FAKE_MAX_MEMBER_ACCOUNT_AGE_DAYS, FAKE_CHANCE_OF_MEMBER_BEING_REFERRED)
+      SeedMemberGenerator.generate( 
+        hs_usernames, 
+        [male, male, male, female, female, female, complicated].sample, 
+        FAKE_MEMBER_MIN_AGE_YEARS, 
+        FAKE_MEMBER_MAX_AGE_YEARS, 
+        FAKE_MAX_MEMBER_ACCOUNT_AGE_DAYS, 
+        FAKE_CHANCE_OF_MEMBER_BEING_REFERRED,
+        FAKE_CHANCE_OF_MEMBER_BEING_PAID)
     end
     # ActiveRecord::Base.connection_pool.clear_stale_cached_connections!
   end
@@ -488,10 +517,12 @@ else
     end
     threads.each { |t| t.join }
   rescue Exception=>e
-    puts "Error while creating posts: #{e}"
+    puts "\nError while creating posts: #{e}"
+    puts e.backtrace
   ensure
-    puts 'Re-enabling trigger on posts; refreshing materialized discussions view'
-    ActiveRecord::Base.connection.execute("alter table posts enable trigger post_insert_trigger_discussions; refresh materialized view discussions")
+    puts '\nRe-enabling trigger on posts; refreshing materialized discussions view'
+    ActiveRecord::Base.connection.execute("alter table posts enable trigger post_insert_trigger_discussions");
+    Discussion.refresh_materialized_view
   end
   puts ' done creating threads and replies'
 end
@@ -517,11 +548,15 @@ else
   earliest_message_time = Member.order('created_at').take(5)[4].created_at
   latest_message_time = Member.order('created_at desc').take(5)[4].created_at
 
-  (1..(MINIMUM_PRIVATE_MESSAGES_COUNT - current_message_count)).each { |i|
-    print "#{i}... " if (i == 1) || (i % 10 == 0)
+  i=0
+  while Message.count < MINIMUM_PRIVATE_MESSAGES_COUNT do
+  #(1..(MINIMUM_PRIVATE_MESSAGES_COUNT - current_message_count)).each { |i|
+    # print "#{i}... " if (i == 1) || (i % 10 == 0)
+    i += 1
+    print 'M'
     hs_messages = HalfSavageMessages.new  if (i % 10 == 0)
-    create_private_message(hs_messages, earliest_message_time, latest_message_time, (rand(4)==0))
-  }
+    create_private_message hs_messages, earliest_message_time, latest_message_time, (rand(4)==0), [0,0,0,0,1,2,3,4].sample
+  end
   puts ' done creating fake messages'
 end
 puts ''

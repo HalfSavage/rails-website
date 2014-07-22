@@ -2,7 +2,7 @@ require_relative "weighted_seed_city_generator"
 
 class SeedMemberGenerator
 
-    def self.generate(hs_usernames, gender, min_age_years, max_age_years, max_account_age_days, chance_of_member_referral)
+    def self.generate(hs_usernames, gender, min_age_years, max_age_years, max_account_age_days, chance_of_member_referral, chance_of_being_paid)
       new_member = Member.new(
         :gender => gender,
         :password => 'password',
@@ -27,6 +27,8 @@ class SeedMemberGenerator
       if rand(0.0..1.0) <= chance_of_member_referral then
         new_member.referred_by = Member.where("created_at < ?", new_member.created_at).order("RANDOM()").first
       end
+
+      new_member.paid = (rand < chance_of_being_paid)
 
       if !new_member.valid? then
         #puts "\nMember can't be saved."

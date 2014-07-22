@@ -30,7 +30,7 @@ ActiveRecord::Schema.define(version: 20140320170014) do
     t.boolean  "vip",                             default: false
     t.boolean  "true_successor_to_hokuto_no_ken", default: false
     t.boolean  "visible_to_non_members",          default: false
-    t.datetime "created_at"
+    t.datetime "created_at",                                      null: false
     t.datetime "updated_at"
     t.string   "email",                           default: "",    null: false
     t.string   "encrypted_password",              default: "",    null: false
@@ -63,6 +63,23 @@ ActiveRecord::Schema.define(version: 20140320170014) do
     t.foreign_key ["member_id"], "members", ["id"], :on_update => :no_action, :on_delete => :no_action, :name => "fk_addresses_member_id"
   end
 
+  create_table "messages", force: true do |t|
+    t.integer  "member_to_id"
+    t.integer  "member_from_id"
+    t.integer  "message_type_id"
+    t.string   "body",                 limit: 8000
+    t.datetime "seen"
+    t.integer  "post_id"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+    t.datetime "deleted_by_sender"
+    t.datetime "deleted_by_recipient"
+    t.boolean  "moderator_voice"
+    t.index ["member_to_id", "message_type_id"], :name => "index_messages_on_member_to_id_and_message_type_id"
+    t.index ["member_to_id", "seen", "message_type_id"], :name => "index_messages_on_member_to_id_and_seen_and_message_type_id"
+  end
+
+  create_view "conversations", " WITH mes_window AS (\n         SELECT row_number() OVER (PARTITION BY GREATEST(mes.member_from_id, mes.member_to_id), LEAST(mes.member_from_id, mes.member_to_id) ORDER BY mes.created_at DESC) AS conversation_message_number,\n            max(mes.id) OVER (PARTITION BY GREATEST(mes.member_from_id, mes.member_to_id), LEAST(mes.member_from_id, mes.member_to_id)) AS conversation_latest_message_id,\n            mes.id,\n            mes.member_to_id,\n            mes.member_from_id,\n            mes.message_type_id,\n            mes.seen,\n            mes.post_id,\n            mes.created_at,\n            mes.updated_at,\n            mes.deleted_by_sender,\n            mes.deleted_by_recipient,\n            mes.moderator_voice,\n            \"left\"((mes.body)::text, 50) AS body\n           FROM messages mes\n        )\n SELECT dense_rank() OVER (ORDER BY mes_window.conversation_latest_message_id) AS conversation_number,\n    mes_window.conversation_message_number,\n    mes_window.conversation_latest_message_id,\n    mes_window.id,\n    mes_window.member_to_id,\n    mes_window.member_from_id,\n    mes_window.message_type_id,\n    mes_window.seen,\n    mes_window.post_id,\n    mes_window.created_at,\n    mes_window.updated_at,\n    mes_window.deleted_by_sender,\n    mes_window.deleted_by_recipient,\n    mes_window.moderator_voice,\n    mes_window.body\n   FROM mes_window", :force => true
   create_table "posts", force: true do |t|
     t.integer  "member_id",                               null: false
     t.integer  "parent_id"
@@ -70,14 +87,14 @@ ActiveRecord::Schema.define(version: 20140320170014) do
     t.boolean  "public_moderator_voice",  default: false, null: false
     t.boolean  "private_moderator_voice", default: false, null: false
     t.text     "body",                                    null: false
-    t.datetime "marked_as_answer"
     t.datetime "created_at",                              null: false
     t.datetime "updated_at"
     t.string   "subject"
-    t.integer  "thread_id"
     t.string   "slug"
+    t.integer  "discussion_id",                           null: false
     t.index ["created_at", "deleted", "public_moderator_voice", "private_moderator_voice", "parent_id", "id"], :name => "ix_posts_discussions_active", :order => {"created_at" => :desc, "deleted" => :asc, "public_moderator_voice" => :asc, "private_moderator_voice" => :asc, "parent_id" => :asc, "id" => :asc}
-    t.index ["parent_id", "created_at", "deleted", "private_moderator_voice", "member_id"], :name => "posts_idx_for_last_replies", :order => {"parent_id" => :asc, "created_at" => :desc, "deleted" => :asc, "private_moderator_voice" => :asc, "member_id" => :asc}
+    t.index ["id", "member_id", "subject", "slug", "created_at", "updated_at", "deleted", "private_moderator_voice"], :name => "posts_idx_for_discussions", :conditions => "((parent_id IS NULL) AND (deleted IS FALSE))"
+    t.index ["parent_id", "created_at", "member_id"], :name => "posts_idx_for_last_replies", :conditions => "(((parent_id IS NOT NULL) AND (deleted = false)) AND (private_moderator_voice = false))", :order => {"parent_id" => :asc, "created_at" => :desc, "member_id" => :asc}
     t.index ["parent_id", "deleted", "member_id", "created_at", "updated_at", "subject", "id"], :name => "ix_posts_discussions", :order => {"parent_id" => :asc, "deleted" => :asc, "member_id" => :asc, "created_at" => :desc, "updated_at" => :asc, "subject" => :asc, "id" => :asc}
     t.index ["slug"], :name => "index_posts_on_slug", :unique => true
   end
@@ -96,6 +113,22 @@ ActiveRecord::Schema.define(version: 20140320170014) do
     t.foreign_key ["post_id"], "posts", ["id"], :on_update => :no_action, :on_delete => :no_action, :name => "fk_discussion_views_post_id"
   end
 
+  create_view "discussions_active", " SELECT COALESCE(p.parent_id, p.id) AS id,\n    sum(\n        CASE\n            WHEN ((date_part('epoch'::text, now()) - date_part('epoch'::text, p.created_at)) < (7200)::double precision) THEN (100.0)::double precision\n            ELSE ((1)::double precision + ((100.0)::double precision / ((date_part('epoch'::text, now()) - date_part('epoch'::text, p.created_at)) / (7200.0)::double precision)))\n        END) AS score\n   FROM posts p\n  WHERE ((((p.created_at >= (('now'::text)::date - '7 days'::interval)) AND (p.deleted = false)) AND (p.public_moderator_voice = false)) AND (p.private_moderator_voice = false))\n  GROUP BY COALESCE(p.parent_id, p.id)", :force => true
+  create_table "forums_posts", force: true do |t|
+    t.integer "forum_id", null: false
+    t.integer "post_id",  null: false
+    t.index ["forum_id", "post_id"], :name => "by_forum_and_post", :unique => true
+  end
+
+  create_view "discussions_fast", " SELECT fp.forum_id,\n    p.id,\n    p.member_id\n   FROM (posts p\n   JOIN forums_posts fp ON ((p.id = fp.post_id)))\n  WHERE ((p.parent_id = p.id) AND (p.deleted = false))", :force => true
+  create_table "forum_moderators", force: true do |t|
+    t.string   "forum_moderators"
+    t.integer  "forum_id"
+    t.integer  "member_id"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
   create_table "forums", force: true do |t|
     t.string   "name"
     t.boolean  "active",            default: true
@@ -108,24 +141,6 @@ ActiveRecord::Schema.define(version: 20140320170014) do
     t.string   "slug"
     t.boolean  "default_forum"
     t.boolean  "special",           default: false
-  end
-
-  create_table "forums_posts", force: true do |t|
-    t.integer "forum_id", null: false
-    t.integer "post_id",  null: false
-    t.index ["forum_id", "post_id"], :name => "by_forum_and_post", :unique => true
-  end
-
-  create_view "posts_last_replies_with_usernames", " SELECT p_last_replies.reply_number, \n    p_last_replies.parent_id, \n    p_last_replies.created_at, \n    p_last_replies.member_id, \n    m.username\n   FROM (( SELECT row_number() OVER (PARTITION BY p.parent_id ORDER BY p.created_at DESC) AS reply_number, \n            p.parent_id, \n            p.created_at, \n            p.member_id\n           FROM posts p\n          WHERE (((p.parent_id IS NOT NULL) AND (p.deleted = false)) AND (p.private_moderator_voice = false))) p_last_replies\n   JOIN members m ON ((p_last_replies.member_id = m.id)))\n  WHERE (p_last_replies.reply_number = 1)", :force => true
-  create_view "discussions", " SELECT f.name, \n    fp.forum_id, \n    p.id, \n    p.member_id, \n    p.body, \n    p.subject, \n    p.created_at, \n    p.updated_at, \n    m.username, \n    ( SELECT count(1) AS count\n           FROM posts preply\n          WHERE ((preply.parent_id = p.id) AND (preply.deleted = false))) AS reply_count, \n    plr.created_at AS reply_created_at, \n    plr.username AS reply_username, \n    ''::text AS usernames, \n    (0.0)::double precision AS score\n   FROM ((((posts p\n   JOIN forums_posts fp ON ((p.id = fp.post_id)))\n   JOIN forums f ON ((fp.forum_id = f.id)))\n   JOIN members m ON ((p.member_id = m.id)))\n   LEFT JOIN posts_last_replies_with_usernames plr ON ((p.id = plr.parent_id)))\n  WHERE ((p.parent_id IS NULL) AND (p.deleted = false))", :force => true
-  create_view "discussions_active", " SELECT COALESCE(p.parent_id, p.id) AS id, \n    sum(\n        CASE\n            WHEN ((date_part('epoch'::text, now()) - date_part('epoch'::text, p.created_at)) < (7200)::double precision) THEN (100.0)::double precision\n            ELSE ((1)::double precision + ((100.0)::double precision / ((date_part('epoch'::text, now()) - date_part('epoch'::text, p.created_at)) / (7200.0)::double precision)))\n        END) AS score\n   FROM posts p\n  WHERE ((((p.created_at >= (('now'::text)::date - '7 days'::interval)) AND (p.deleted = false)) AND (p.public_moderator_voice = false)) AND (p.private_moderator_voice = false))\n  GROUP BY COALESCE(p.parent_id, p.id)", :force => true
-  create_view "discussions_fast", " SELECT fp.forum_id, \n    p.id\n   FROM (posts p\n   JOIN forums_posts fp ON ((p.id = fp.post_id)))\n  WHERE ((p.parent_id IS NULL) AND (p.deleted = false))", :force => true
-  create_table "forum_moderators", force: true do |t|
-    t.string   "forum_moderators"
-    t.integer  "forum_id"
-    t.integer  "member_id"
-    t.datetime "created_at"
-    t.datetime "updated_at"
   end
 
   create_table "genders", force: true do |t|
@@ -147,23 +162,6 @@ ActiveRecord::Schema.define(version: 20140320170014) do
     t.string "name"
   end
 
-  create_table "messages", force: true do |t|
-    t.integer  "member_to_id"
-    t.integer  "member_from_id"
-    t.integer  "message_type_id"
-    t.string   "body",                 limit: 8000
-    t.datetime "seen"
-    t.integer  "post_id"
-    t.datetime "created_at"
-    t.datetime "updated_at"
-    t.datetime "deleted_by_sender"
-    t.datetime "deleted_by_recipient"
-    t.boolean  "moderator_voice"
-    t.index ["member_to_id", "message_type_id"], :name => "index_messages_on_member_to_id_and_message_type_id"
-    t.index ["member_to_id", "seen", "message_type_id"], :name => "index_messages_on_member_to_id_and_seen_and_message_type_id"
-  end
-
-  create_view "pg_stat_statements", " SELECT pg_stat_statements.userid, \n    pg_stat_statements.dbid, \n    pg_stat_statements.query, \n    pg_stat_statements.calls, \n    pg_stat_statements.total_time, \n    pg_stat_statements.rows, \n    pg_stat_statements.shared_blks_hit, \n    pg_stat_statements.shared_blks_read, \n    pg_stat_statements.shared_blks_dirtied, \n    pg_stat_statements.shared_blks_written, \n    pg_stat_statements.local_blks_hit, \n    pg_stat_statements.local_blks_read, \n    pg_stat_statements.local_blks_dirtied, \n    pg_stat_statements.local_blks_written, \n    pg_stat_statements.temp_blks_read, \n    pg_stat_statements.temp_blks_written, \n    pg_stat_statements.blk_read_time, \n    pg_stat_statements.blk_write_time\n   FROM pg_stat_statements() pg_stat_statements(userid, dbid, query, calls, total_time, rows, shared_blks_hit, shared_blks_read, shared_blks_dirtied, shared_blks_written, local_blks_hit, local_blks_read, local_blks_dirtied, local_blks_written, temp_blks_read, temp_blks_written, blk_read_time, blk_write_time)", :force => true
   create_table "post_action_types", force: true do |t|
     t.string   "name"
     t.boolean  "moderator_only"
@@ -190,7 +188,8 @@ ActiveRecord::Schema.define(version: 20140320170014) do
     t.datetime "updated_at"
   end
 
-  create_view "posts_last_replies", " SELECT p_last_replies.reply_number, \n    p_last_replies.parent_id, \n    p_last_replies.created_at, \n    p_last_replies.member_id\n   FROM ( SELECT row_number() OVER (PARTITION BY p.parent_id ORDER BY p.created_at DESC) AS reply_number, \n            p.parent_id, \n            p.created_at, \n            p.member_id\n           FROM posts p\n          WHERE (((p.parent_id IS NOT NULL) AND (p.deleted = false)) AND (p.private_moderator_voice = false))) p_last_replies\n  WHERE (p_last_replies.reply_number = 1)", :force => true
+  create_view "posts_last_replies", " SELECT p_last_replies.reply_number,\n    p_last_replies.parent_id,\n    p_last_replies.created_at,\n    p_last_replies.member_id\n   FROM ( SELECT row_number() OVER (PARTITION BY p.parent_id ORDER BY p.created_at DESC) AS reply_number,\n            p.parent_id,\n            p.created_at,\n            p.member_id\n           FROM posts p\n          WHERE (((p.parent_id IS NOT NULL) AND (p.deleted = false)) AND (p.private_moderator_voice = false))) p_last_replies\n  WHERE (p_last_replies.reply_number = 1)", :force => true
+  create_view "posts_last_replies_with_usernames", " SELECT p_last_replies.reply_number,\n    p_last_replies.parent_id,\n    p_last_replies.created_at,\n    p_last_replies.member_id,\n    m.username\n   FROM (( SELECT row_number() OVER (PARTITION BY p.parent_id ORDER BY p.created_at DESC) AS reply_number,\n            p.parent_id,\n            p.created_at,\n            p.member_id\n           FROM posts p\n          WHERE (((p.parent_id IS NOT NULL) AND (p.deleted = false)) AND (p.private_moderator_voice = false))) p_last_replies\n   JOIN members m ON ((p_last_replies.member_id = m.id)))\n  WHERE (p_last_replies.reply_number = 1)", :force => true
   create_table "profile_views", force: true do |t|
     t.integer  "member_id"
     t.integer  "viewed_member_id",             null: false
@@ -227,6 +226,6 @@ ActiveRecord::Schema.define(version: 20140320170014) do
     t.index ["tag_text"], :name => "tag_idx_lower", :case_sensitive => false
   end
 
-  create_view "tags_trending", " SELECT pt.tag_id, \n    t.tag_text, \n    count(pt.tag_id) AS count, \n    sum(\n        CASE\n            WHEN ((date_part('epoch'::text, now()) - date_part('epoch'::text, pt.created_at)) < (7200)::double precision) THEN (100.0)::double precision\n            ELSE ((1)::double precision + ((100.0)::double precision / ((date_part('epoch'::text, now()) - date_part('epoch'::text, pt.created_at)) / (7200.0)::double precision)))\n        END) AS score\n   FROM ((post_tags pt\n   JOIN forums_posts fp ON ((pt.post_id = fp.post_id)))\n   JOIN tags t ON ((pt.tag_id = t.id)))\n  GROUP BY pt.tag_id, t.tag_text\n  ORDER BY sum(\nCASE\n    WHEN ((date_part('epoch'::text, now()) - date_part('epoch'::text, pt.created_at)) < (7200)::double precision) THEN (100.0)::double precision\n    ELSE ((1)::double precision + ((100.0)::double precision / ((date_part('epoch'::text, now()) - date_part('epoch'::text, pt.created_at)) / (7200.0)::double precision)))\nEND) DESC\n LIMIT 100", :force => true
-  create_view "tags_trending_by_forum", " SELECT pt.tag_id, \n    t.tag_text, \n    count(pt.tag_id) AS count, \n    fp.forum_id, \n    sum(\n        CASE\n            WHEN ((date_part('epoch'::text, now()) - date_part('epoch'::text, pt.created_at)) < (7200)::double precision) THEN (100.0)::double precision\n            ELSE ((1)::double precision + ((100.0)::double precision / ((date_part('epoch'::text, now()) - date_part('epoch'::text, pt.created_at)) / (7200.0)::double precision)))\n        END) AS score\n   FROM ((post_tags pt\n   JOIN forums_posts fp ON ((pt.post_id = fp.post_id)))\n   JOIN tags t ON ((pt.tag_id = t.id)))\n  GROUP BY fp.forum_id, pt.tag_id, t.tag_text\n  ORDER BY sum(\nCASE\n    WHEN ((date_part('epoch'::text, now()) - date_part('epoch'::text, pt.created_at)) < (7200)::double precision) THEN (100.0)::double precision\n    ELSE ((1)::double precision + ((100.0)::double precision / ((date_part('epoch'::text, now()) - date_part('epoch'::text, pt.created_at)) / (7200.0)::double precision)))\nEND) DESC\n LIMIT 100", :force => true
+  create_view "tags_trending", " SELECT pt.tag_id,\n    t.tag_text,\n    count(pt.tag_id) AS count,\n    sum(\n        CASE\n            WHEN ((date_part('epoch'::text, now()) - date_part('epoch'::text, pt.created_at)) < (7200)::double precision) THEN (100.0)::double precision\n            ELSE ((1)::double precision + ((100.0)::double precision / ((date_part('epoch'::text, now()) - date_part('epoch'::text, pt.created_at)) / (7200.0)::double precision)))\n        END) AS score\n   FROM ((post_tags pt\n   JOIN forums_posts fp ON ((pt.post_id = fp.post_id)))\n   JOIN tags t ON ((pt.tag_id = t.id)))\n  GROUP BY pt.tag_id, t.tag_text\n  ORDER BY sum(\nCASE\n    WHEN ((date_part('epoch'::text, now()) - date_part('epoch'::text, pt.created_at)) < (7200)::double precision) THEN (100.0)::double precision\n    ELSE ((1)::double precision + ((100.0)::double precision / ((date_part('epoch'::text, now()) - date_part('epoch'::text, pt.created_at)) / (7200.0)::double precision)))\nEND) DESC\n LIMIT 100", :force => true
+  create_view "tags_trending_by_forum", " SELECT pt.tag_id,\n    t.tag_text,\n    count(pt.tag_id) AS count,\n    fp.forum_id,\n    sum(\n        CASE\n            WHEN ((date_part('epoch'::text, now()) - date_part('epoch'::text, pt.created_at)) < (7200)::double precision) THEN (100.0)::double precision\n            ELSE ((1)::double precision + ((100.0)::double precision / ((date_part('epoch'::text, now()) - date_part('epoch'::text, pt.created_at)) / (7200.0)::double precision)))\n        END) AS score\n   FROM ((post_tags pt\n   JOIN forums_posts fp ON ((pt.post_id = fp.post_id)))\n   JOIN tags t ON ((pt.tag_id = t.id)))\n  GROUP BY fp.forum_id, pt.tag_id, t.tag_text\n  ORDER BY sum(\nCASE\n    WHEN ((date_part('epoch'::text, now()) - date_part('epoch'::text, pt.created_at)) < (7200)::double precision) THEN (100.0)::double precision\n    ELSE ((1)::double precision + ((100.0)::double precision / ((date_part('epoch'::text, now()) - date_part('epoch'::text, pt.created_at)) / (7200.0)::double precision)))\nEND) DESC\n LIMIT 100", :force => true
 end

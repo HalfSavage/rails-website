@@ -95,6 +95,19 @@ CREATE FUNCTION discussions_active_friends(member_id integer) RETURNS TABLE(name
 
 
 --
+-- Name: discussions_refresh(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION discussions_refresh() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+ BEGIN
+ refresh materialized view discussions;
+ return NEW;
+ END;
+$$;
+
+--
 -- Name: post_tags_replace(integer, character varying[]); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -121,7 +134,7 @@ SET default_tablespace = '';
 SET default_with_oids = false;
 
 --
--- Name: addresses; Type: TABLE; Schema: public; Owner: -; Tablespace:
+-- Name: addresses; Type: TABLE; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE TABLE addresses (
@@ -159,7 +172,67 @@ ALTER SEQUENCE addresses_id_seq OWNED BY addresses.id;
 
 
 --
--- Name: discussion_views; Type: TABLE; Schema: public; Owner: -; Tablespace:
+-- Name: messages; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE TABLE messages (
+    id integer NOT NULL,
+    member_to_id integer,
+    member_from_id integer,
+    message_type_id integer,
+    body character varying(8000),
+    seen timestamp without time zone,
+    post_id integer,
+    created_at timestamp without time zone,
+    updated_at timestamp without time zone,
+    deleted_by_sender timestamp without time zone,
+    deleted_by_recipient timestamp without time zone,
+    moderator_voice boolean
+);
+
+
+--
+-- Name: conversations; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW conversations AS
+ WITH mes_window AS (
+         SELECT row_number() OVER (PARTITION BY GREATEST(mes.member_from_id, mes.member_to_id), LEAST(mes.member_from_id, mes.member_to_id) ORDER BY mes.created_at DESC) AS conversation_message_number,
+            max(mes.id) OVER (PARTITION BY GREATEST(mes.member_from_id, mes.member_to_id), LEAST(mes.member_from_id, mes.member_to_id)) AS conversation_latest_message_id,
+            mes.id,
+            mes.member_to_id,
+            mes.member_from_id,
+            mes.message_type_id,
+            mes.seen,
+            mes.post_id,
+            mes.created_at,
+            mes.updated_at,
+            mes.deleted_by_sender,
+            mes.deleted_by_recipient,
+            mes.moderator_voice,
+            "left"((mes.body)::text, 50) AS body
+           FROM messages mes
+        )
+ SELECT dense_rank() OVER (ORDER BY mes_window.conversation_latest_message_id) AS conversation_number,
+    mes_window.conversation_message_number,
+    mes_window.conversation_latest_message_id,
+    mes_window.id,
+    mes_window.member_to_id,
+    mes_window.member_from_id,
+    mes_window.message_type_id,
+    mes_window.seen,
+    mes_window.post_id,
+    mes_window.created_at,
+    mes_window.updated_at,
+    mes_window.deleted_by_sender,
+    mes_window.deleted_by_recipient,
+    mes_window.moderator_voice,
+    mes_window.body
+   FROM mes_window;
+
+
+--
+-- Name: discussion_views; Type: TABLE; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE TABLE discussion_views (
@@ -192,7 +265,7 @@ ALTER SEQUENCE discussion_views_id_seq OWNED BY discussion_views.id;
 
 
 --
--- Name: forums; Type: TABLE; Schema: public; Owner: -; Tablespace:
+-- Name: forums; Type: TABLE; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE TABLE forums (
@@ -212,7 +285,7 @@ CREATE TABLE forums (
 
 
 --
--- Name: forums_posts; Type: TABLE; Schema: public; Owner: -; Tablespace:
+-- Name: forums_posts; Type: TABLE; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE TABLE forums_posts (
@@ -223,7 +296,7 @@ CREATE TABLE forums_posts (
 
 
 --
--- Name: members; Type: TABLE; Schema: public; Owner: -; Tablespace:
+-- Name: members; Type: TABLE; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE TABLE members (
@@ -252,12 +325,13 @@ CREATE TABLE members (
     last_sign_in_at timestamp without time zone,
     current_sign_in_ip character varying(255),
     last_sign_in_ip character varying(255),
-    gender_id integer
+    gender_id integer,
+    paid boolean DEFAULT false NOT NULL
 );
 
 
 --
--- Name: posts; Type: TABLE; Schema: public; Owner: -; Tablespace:
+-- Name: posts; Type: TABLE; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE TABLE posts (
@@ -272,30 +346,8 @@ CREATE TABLE posts (
     updated_at timestamp without time zone,
     subject character varying(255),
     slug character varying(255)
-    --discussion_id int not null
 );
 
-/*
-CREATE OR REPLACE FUNCTION post_populate_discussion_id() RETURNS trigger AS $BODY$
- BEGIN
- NEW.discussion_id := coalesce(NEW.discussion_id, NEW.parent_id, NEW.id);
- return NEW;
- END;
-$BODY$
-LANGUAGE plpgsql VOLATILE;
-
-create trigger post_insert_trigger BEFORE INSERT ON posts FOR EACH ROW EXECUTE PROCEDURE post_populate_discussion_id();
-*/
-
-CREATE OR REPLACE FUNCTION public.discussions_refresh() RETURNS trigger as $function$
- BEGIN
- refresh materialized view discussions;
- return NEW;
- END;
-$function$
-LANGUAGE plpgsql VOLATILE;
-
-create trigger post_insert_trigger_discussions AFTER INSERT ON posts FOR EACH ROW EXECUTE PROCEDURE discussions_refresh();
 
 --
 -- Name: posts_last_replies_with_usernames; Type: VIEW; Schema: public; Owner: -
@@ -318,7 +370,7 @@ CREATE VIEW posts_last_replies_with_usernames AS
 
 
 --
--- Name: discussions; Type: VIEW; Schema: public; Owner: -
+-- Name: discussions; Type: MATERIALIZED VIEW; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE MATERIALIZED VIEW discussions AS
@@ -344,7 +396,8 @@ CREATE MATERIALIZED VIEW discussions AS
    JOIN forums f ON ((fp.forum_id = f.id)))
    JOIN members m ON ((p.member_id = m.id)))
    LEFT JOIN posts_last_replies_with_usernames plr ON ((p.id = plr.parent_id)))
-  WHERE ((p.parent_id IS NULL) AND (p.deleted = false));
+  WHERE ((p.parent_id IS NULL) AND (p.deleted = false))
+  WITH NO DATA;
 
 
 --
@@ -364,7 +417,20 @@ CREATE VIEW discussions_active AS
 
 
 --
--- Name: forum_moderators; Type: TABLE; Schema: public; Owner: -; Tablespace:
+-- Name: discussions_fast; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW discussions_fast AS
+ SELECT fp.forum_id,
+    p.id,
+    p.member_id
+   FROM (posts p
+   JOIN forums_posts fp ON ((p.id = fp.post_id)))
+  WHERE ((p.parent_id = p.id) AND (p.deleted = false));
+
+
+--
+-- Name: forum_moderators; Type: TABLE; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE TABLE forum_moderators (
@@ -435,7 +501,7 @@ ALTER SEQUENCE forums_posts_id_seq OWNED BY forums_posts.id;
 
 
 --
--- Name: genders; Type: TABLE; Schema: public; Owner: -; Tablespace:
+-- Name: genders; Type: TABLE; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE TABLE genders (
@@ -465,7 +531,7 @@ ALTER SEQUENCE genders_id_seq OWNED BY genders.id;
 
 
 --
--- Name: likes; Type: TABLE; Schema: public; Owner: -; Tablespace:
+-- Name: likes; Type: TABLE; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE TABLE likes (
@@ -518,7 +584,7 @@ ALTER SEQUENCE members_id_seq OWNED BY members.id;
 
 
 --
--- Name: message_types; Type: TABLE; Schema: public; Owner: -; Tablespace:
+-- Name: message_types; Type: TABLE; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE TABLE message_types (
@@ -547,26 +613,6 @@ ALTER SEQUENCE message_types_id_seq OWNED BY message_types.id;
 
 
 --
--- Name: messages; Type: TABLE; Schema: public; Owner: -; Tablespace:
---
-
-CREATE TABLE messages (
-    id integer NOT NULL,
-    member_to_id integer,
-    member_from_id integer,
-    message_type_id integer,
-    body character varying(8000),
-    seen timestamp without time zone,
-    post_id integer,
-    created_at timestamp without time zone,
-    updated_at timestamp without time zone,
-    deleted_by_sender timestamp without time zone,
-    deleted_by_recipient timestamp without time zone,
-    moderator_voice boolean
-);
-
-
---
 -- Name: messages_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -586,7 +632,7 @@ ALTER SEQUENCE messages_id_seq OWNED BY messages.id;
 
 
 --
--- Name: post_action_types; Type: TABLE; Schema: public; Owner: -; Tablespace:
+-- Name: post_action_types; Type: TABLE; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE TABLE post_action_types (
@@ -620,7 +666,7 @@ ALTER SEQUENCE post_action_types_id_seq OWNED BY post_action_types.id;
 
 
 --
--- Name: post_actions; Type: TABLE; Schema: public; Owner: -; Tablespace:
+-- Name: post_actions; Type: TABLE; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE TABLE post_actions (
@@ -654,7 +700,7 @@ ALTER SEQUENCE post_actions_id_seq OWNED BY post_actions.id;
 
 
 --
--- Name: post_tags; Type: TABLE; Schema: public; Owner: -; Tablespace:
+-- Name: post_tags; Type: TABLE; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE TABLE post_tags (
@@ -703,7 +749,7 @@ CREATE VIEW posts_last_replies AS
 
 
 --
--- Name: profile_views; Type: TABLE; Schema: public; Owner: -; Tablespace:
+-- Name: profile_views; Type: TABLE; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE TABLE profile_views (
@@ -736,7 +782,7 @@ ALTER SEQUENCE profile_views_id_seq OWNED BY profile_views.id;
 
 
 --
--- Name: relationships; Type: TABLE; Schema: public; Owner: -; Tablespace:
+-- Name: relationships; Type: TABLE; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE TABLE relationships (
@@ -771,7 +817,7 @@ ALTER SEQUENCE relationships_id_seq OWNED BY relationships.id;
 
 
 --
--- Name: schema_migrations; Type: TABLE; Schema: public; Owner: -; Tablespace:
+-- Name: schema_migrations; Type: TABLE; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE TABLE schema_migrations (
@@ -780,7 +826,7 @@ CREATE TABLE schema_migrations (
 
 
 --
--- Name: tags; Type: TABLE; Schema: public; Owner: -; Tablespace:
+-- Name: tags; Type: TABLE; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE TABLE tags (
@@ -974,7 +1020,7 @@ ALTER TABLE ONLY tags ALTER COLUMN id SET DEFAULT nextval('tags_id_seq'::regclas
 
 
 --
--- Name: addresses_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
+-- Name: addresses_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
 --
 
 ALTER TABLE ONLY addresses
@@ -982,7 +1028,7 @@ ALTER TABLE ONLY addresses
 
 
 --
--- Name: discussion_views_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
+-- Name: discussion_views_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
 --
 
 ALTER TABLE ONLY discussion_views
@@ -990,7 +1036,7 @@ ALTER TABLE ONLY discussion_views
 
 
 --
--- Name: forum_moderators_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
+-- Name: forum_moderators_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
 --
 
 ALTER TABLE ONLY forum_moderators
@@ -998,7 +1044,7 @@ ALTER TABLE ONLY forum_moderators
 
 
 --
--- Name: forums_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
+-- Name: forums_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
 --
 
 ALTER TABLE ONLY forums
@@ -1006,7 +1052,7 @@ ALTER TABLE ONLY forums
 
 
 --
--- Name: forums_posts_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
+-- Name: forums_posts_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
 --
 
 ALTER TABLE ONLY forums_posts
@@ -1014,7 +1060,7 @@ ALTER TABLE ONLY forums_posts
 
 
 --
--- Name: genders_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
+-- Name: genders_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
 --
 
 ALTER TABLE ONLY genders
@@ -1022,7 +1068,7 @@ ALTER TABLE ONLY genders
 
 
 --
--- Name: likes_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
+-- Name: likes_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
 --
 
 ALTER TABLE ONLY likes
@@ -1030,7 +1076,7 @@ ALTER TABLE ONLY likes
 
 
 --
--- Name: members_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
+-- Name: members_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
 --
 
 ALTER TABLE ONLY members
@@ -1038,7 +1084,7 @@ ALTER TABLE ONLY members
 
 
 --
--- Name: message_types_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
+-- Name: message_types_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
 --
 
 ALTER TABLE ONLY message_types
@@ -1046,7 +1092,7 @@ ALTER TABLE ONLY message_types
 
 
 --
--- Name: messages_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
+-- Name: messages_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
 --
 
 ALTER TABLE ONLY messages
@@ -1054,7 +1100,7 @@ ALTER TABLE ONLY messages
 
 
 --
--- Name: post_action_types_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
+-- Name: post_action_types_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
 --
 
 ALTER TABLE ONLY post_action_types
@@ -1062,7 +1108,7 @@ ALTER TABLE ONLY post_action_types
 
 
 --
--- Name: post_actions_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
+-- Name: post_actions_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
 --
 
 ALTER TABLE ONLY post_actions
@@ -1070,7 +1116,7 @@ ALTER TABLE ONLY post_actions
 
 
 --
--- Name: posts_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
+-- Name: posts_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
 --
 
 ALTER TABLE ONLY posts
@@ -1078,7 +1124,7 @@ ALTER TABLE ONLY posts
 
 
 --
--- Name: profile_views_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
+-- Name: profile_views_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
 --
 
 ALTER TABLE ONLY profile_views
@@ -1086,7 +1132,7 @@ ALTER TABLE ONLY profile_views
 
 
 --
--- Name: relationships_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
+-- Name: relationships_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
 --
 
 ALTER TABLE ONLY relationships
@@ -1094,7 +1140,7 @@ ALTER TABLE ONLY relationships
 
 
 --
--- Name: tags_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
+-- Name: tags_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
 --
 
 ALTER TABLE ONLY tags
@@ -1102,187 +1148,200 @@ ALTER TABLE ONLY tags
 
 
 --
--- Name: by_forum_and_post; Type: INDEX; Schema: public; Owner: -; Tablespace:
+-- Name: by_forum_and_post; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE UNIQUE INDEX by_forum_and_post ON forums_posts USING btree (forum_id, post_id);
 
 
 --
--- Name: discussion_views_idx_member_post; Type: INDEX; Schema: public; Owner: -; Tablespace:
+-- Name: discussion_views_idx_member_post; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE UNIQUE INDEX discussion_views_idx_member_post ON discussion_views USING btree (member_id, post_id);
 
 
 --
--- Name: index_addresses_on_member_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
+-- Name: index_addresses_on_member_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE INDEX index_addresses_on_member_id ON addresses USING btree (member_id);
 
 
 --
--- Name: index_discussion_views_on_member_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
+-- Name: index_discussion_views_on_member_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE INDEX index_discussion_views_on_member_id ON discussion_views USING btree (member_id);
 
 
 --
--- Name: index_discussion_views_on_post_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
+-- Name: index_discussion_views_on_post_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE INDEX index_discussion_views_on_post_id ON discussion_views USING btree (post_id);
 
 
 --
--- Name: index_likes_on_post_id_and_member_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
+-- Name: index_likes_on_post_id_and_member_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE UNIQUE INDEX index_likes_on_post_id_and_member_id ON likes USING btree (post_id, member_id);
 
 
 --
--- Name: index_members_on_email; Type: INDEX; Schema: public; Owner: -; Tablespace:
+-- Name: index_members_on_email; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE UNIQUE INDEX index_members_on_email ON members USING btree (email);
 
 
 --
--- Name: index_members_on_reset_password_token; Type: INDEX; Schema: public; Owner: -; Tablespace:
+-- Name: index_members_on_reset_password_token; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE UNIQUE INDEX index_members_on_reset_password_token ON members USING btree (reset_password_token);
 
 
 --
--- Name: index_members_on_username; Type: INDEX; Schema: public; Owner: -; Tablespace:
+-- Name: index_members_on_username; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE UNIQUE INDEX index_members_on_username ON members USING btree (username);
 
 
 --
--- Name: index_messages_on_member_to_id_and_message_type_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
+-- Name: index_messages_on_member_to_id_and_message_type_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE INDEX index_messages_on_member_to_id_and_message_type_id ON messages USING btree (member_to_id, message_type_id);
 
 
 --
--- Name: index_messages_on_member_to_id_and_seen_and_message_type_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
+-- Name: index_messages_on_member_to_id_and_seen_and_message_type_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE INDEX index_messages_on_member_to_id_and_seen_and_message_type_id ON messages USING btree (member_to_id, seen, message_type_id);
 
 
 --
--- Name: index_posts_on_slug; Type: INDEX; Schema: public; Owner: -; Tablespace:
+-- Name: index_posts_on_slug; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE UNIQUE INDEX index_posts_on_slug ON posts USING btree (slug);
 
 
 --
--- Name: index_profile_views_on_member_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
+-- Name: index_profile_views_on_member_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE INDEX index_profile_views_on_member_id ON profile_views USING btree (member_id);
 
 
 --
--- Name: index_profile_views_on_viewed_member_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
+-- Name: index_profile_views_on_viewed_member_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE INDEX index_profile_views_on_viewed_member_id ON profile_views USING btree (viewed_member_id);
 
 
 --
--- Name: index_relationships_on_member_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
+-- Name: index_relationships_on_member_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE INDEX index_relationships_on_member_id ON relationships USING btree (member_id);
 
 
 --
--- Name: index_relationships_on_related_member_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
+-- Name: index_relationships_on_related_member_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE INDEX index_relationships_on_related_member_id ON relationships USING btree (related_member_id);
 
 
 --
--- Name: ix_posts_discussions; Type: INDEX; Schema: public; Owner: -; Tablespace:
+-- Name: ix_posts_discussions; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE INDEX ix_posts_discussions ON posts USING btree (parent_id, deleted, member_id, created_at DESC, updated_at, subject, id);
 
 
 --
--- Name: ix_posts_discussions_active; Type: INDEX; Schema: public; Owner: -; Tablespace:
+-- Name: ix_posts_discussions_active; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE INDEX ix_posts_discussions_active ON posts USING btree (created_at DESC, deleted, public_moderator_voice, private_moderator_voice, parent_id, id);
 
 
 --
--- Name: post_actions_post_id_etc; Type: INDEX; Schema: public; Owner: -; Tablespace:
+-- Name: post_actions_post_id_etc; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE INDEX post_actions_post_id_etc ON post_actions USING btree (post_id, post_action_type_id, created_at);
 
 
 --
--- Name: posts_idx_for_last_replies; Type: INDEX; Schema: public; Owner: -; Tablespace:
+-- Name: posts_idx_for_discussions; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
-create index posts_idx_for_last_replies on posts(parent_id, created_at desc, member_id) where (parent_id IS NOT NULL AND deleted = false AND private_moderator_voice = false);
-
-create index posts_idx_for_discussions on posts(id, member_id, left(body, 200), subject, slug, created_at, updated_at, deleted, private_moderator_voice) WHERE (parent_id IS NULL AND deleted is false);
+CREATE INDEX posts_idx_for_discussions ON posts USING btree (id, member_id, "left"(body, 200), subject, slug, created_at, updated_at, deleted, private_moderator_voice) WHERE ((parent_id IS NULL) AND (deleted IS FALSE));
 
 
 --
--- Name: profile_views_idx_awesome; Type: INDEX; Schema: public; Owner: -; Tablespace:
+-- Name: posts_idx_for_last_replies; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE INDEX posts_idx_for_last_replies ON posts USING btree (parent_id, created_at DESC, member_id) WHERE (((parent_id IS NOT NULL) AND (deleted = false)) AND (private_moderator_voice = false));
+
+
+--
+-- Name: profile_views_idx_awesome; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE UNIQUE INDEX profile_views_idx_awesome ON profile_views USING btree (viewed_member_id, member_id, tally);
 
 
 --
--- Name: relationships_idx_all; Type: INDEX; Schema: public; Owner: -; Tablespace:
+-- Name: relationships_idx_all; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE INDEX relationships_idx_all ON relationships USING btree (member_id, related_member_id, friend, blocked, may_view_private_pictures);
 
 
 --
--- Name: relationships_idx_covering; Type: INDEX; Schema: public; Owner: -; Tablespace:
+-- Name: relationships_idx_covering; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE INDEX relationships_idx_covering ON discussion_views USING btree (member_id, post_id, updated_at, tally);
 
 
 --
--- Name: relationships_idx_friend; Type: INDEX; Schema: public; Owner: -; Tablespace:
+-- Name: relationships_idx_friend; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE UNIQUE INDEX relationships_idx_friend ON relationships USING btree (member_id, related_member_id, friend);
 
 
 --
--- Name: tag_idx_lower; Type: INDEX; Schema: public; Owner: -; Tablespace:
+-- Name: tag_idx_lower; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE INDEX tag_idx_lower ON tags USING btree (lower((tag_text)::text));
 
 
 --
--- Name: unique_schema_migrations; Type: INDEX; Schema: public; Owner: -; Tablespace:
+-- Name: unique_schema_migrations; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE UNIQUE INDEX unique_schema_migrations ON schema_migrations USING btree (version);
+
+
+--
+-- Name: post_insert_trigger_discussions; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER post_insert_trigger_discussions AFTER INSERT ON posts FOR EACH ROW EXECUTE PROCEDURE discussions_refresh();
+CREATE TRIGGER post_update_trigger_discussions AFTER UPDATE ON posts FOR EACH ROW EXECUTE PROCEDURE discussions_refresh();
 
 
 --

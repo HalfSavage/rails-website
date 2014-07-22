@@ -38,4 +38,12 @@ class Discussion < ActiveRecord::Base
     raise Exception.new "Can't return recently-created discussions without a valid Member or member_id" if member_id.nil?
     where(member_id: member_id)
   end
+
+  # It's not necessary to call this for a normal post create/update - it's called 
+  # automatically via insert and update triggers on the post table.
+  # The only time you need to call this is if you've disabled those triggers....
+  # ...like for example, in seeds.rb, when we're mass-inserting a fuckton of posts
+  def self.refresh_materialized_view
+    ActiveRecord::Base.connection.execute("refresh materialized view discussions;")
+  end 
 end

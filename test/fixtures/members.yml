@@ -1,37 +1,3 @@
-# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
-
-albert:
-  username: Albert
-  first_name: Albert
-  last_name: Smith 
-  referred_by_id: 
-  date_of_birth: 1983-11-02 19:28:58
-  gender_id: 1
-  active: true
-  moderator: false
-  supermoderator: false
-  banned: false
-  vip: false
-  true_successor_to_hokuto_no_ken: false
-  visible_to_non_members: true
-  email: albert@halfsavage.com
-
-beth:
-  username: Beth
-  first_name: Beth
-  last_name: Smith 
-  referred_by_id: 
-  date_of_birth: 1983-11-02 19:28:58
-  gender_id: 2
-  active: true
-  moderator: false
-  supermoderator: false
-  banned: false
-  vip: false
-  true_successor_to_hokuto_no_ken: false
-  visible_to_non_members: true
-  email: beth@halfsavage.com
-
 banned_member:
   username: FailureFreddy
   first_name: Freddy
@@ -47,6 +13,7 @@ banned_member:
   true_successor_to_hokuto_no_ken: false
   visible_to_non_members: true
   email: bannedmember@halfsavage.com
+  paid: true
 
 inactive_member:
   username: InactiveIndia
@@ -63,6 +30,7 @@ inactive_member:
   true_successor_to_hokuto_no_ken: false
   visible_to_non_members: true
   email: inactivemember@halfsavage.com
+  paid: true
 
 manny_moderator:
   username: Manny
@@ -79,6 +47,41 @@ manny_moderator:
   true_successor_to_hokuto_no_ken: false
   visible_to_non_members: true
   email: mannythemoderator@halfsavage.com
+  paid: true
+
+albert:
+  username: Albert
+  first_name: Albert
+  last_name: Smith 
+  referred_by_id: 
+  date_of_birth: 1983-11-02 19:28:58
+  gender_id: 1
+  active: true
+  moderator: false
+  supermoderator: false
+  banned: false
+  vip: false
+  true_successor_to_hokuto_no_ken: false
+  visible_to_non_members: true
+  email: albert@halfsavage.com
+  paid: true
+
+beth:
+  username: Beth
+  first_name: Beth
+  last_name: Smith 
+  referred_by_id: 
+  date_of_birth: 1983-11-02 19:28:58
+  gender_id: 2
+  active: true
+  moderator: false
+  supermoderator: false
+  banned: false
+  vip: false
+  true_successor_to_hokuto_no_ken: false
+  visible_to_non_members: true
+  email: beth@halfsavage.com
+  paid: true
 
 carrie:
   username: Carrie
@@ -95,6 +98,7 @@ carrie:
   true_successor_to_hokuto_no_ken: false
   visible_to_non_members: true
   email: carrie@halfsavage.com
+  paid: true
 
 doug:
   username: Doug
@@ -111,6 +115,7 @@ doug:
   true_successor_to_hokuto_no_ken: false
   visible_to_non_members: true
   email: doug@halfsavage.com
+  paid: true
 
 edgar:
   username: Edgar
@@ -127,6 +132,7 @@ edgar:
   true_successor_to_hokuto_no_ken: false
   visible_to_non_members: true
   email: edgar@halfsavage.com
+  paid: true
 
 frida:
   username: Frida
@@ -143,6 +149,7 @@ frida:
   true_successor_to_hokuto_no_ken: false
   visible_to_non_members: true
   email: frida@halfsavage.com
+  paid: true
 
 gerta:
   username: Gerta
@@ -159,3 +166,21 @@ gerta:
   true_successor_to_hokuto_no_ken: false
   visible_to_non_members: true
   email: gerta@halfsavage.com
+  paid: true
+
+unpaid_guy:
+  username: UnpaidGuy
+  first_name: UnpaidGuy
+  last_name: Smith 
+  referred_by_id: 
+  date_of_birth: 1985-11-02 19:28:58
+  gender_id: 1
+  active: true
+  moderator: false
+  supermoderator: false
+  banned: false
+  vip: false
+  true_successor_to_hokuto_no_ken: false
+  visible_to_non_members: true
+  email: unpaid_guy@halfsavage.com  
+  paid: false
