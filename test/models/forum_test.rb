@@ -31,15 +31,14 @@ class ForumTest < ActiveSupport::TestCase
 
   test "paid member should see paid-only forum" do
     assert_nothing_raised do
-      mem = Member.where(banned: false, active:true).first
-      mem.paid = true
+      mem = Member.where(banned: false, active:true, paid:true).first
       Forum.where(name: 'PaidForum').first.active_discussions_for_member(mem)  
     end
   end 
 
   test "unpaid member shouldn't see paid-only forum" do 
     assert_raise(MustBePaidException) do
-      mem = Member.where(banned: false, active:true).first
+      mem = Member.where(banned: false, active:true, paid:false).first
       mem.paid = false
       Forum.where(name: 'PaidForum').first.active_discussions_for_member(mem)  
     end
@@ -86,45 +85,5 @@ class ForumTest < ActiveSupport::TestCase
     end
   end 
 
-  test 'Regular forum - active_discussion_count_for_member should return correct count' do
-    forum = Forum.where(name: 'PublicForum').first
-    member = Member.where(email: 'beth@halfsavage.com').first
-    assert_equal(forum.active_discussions_for_member(member).count ,  forum.active_discussion_count_for_member(member)  )
-  end 
 
-  test 'Special forum "all" - active_discussion_count_for_member should return correct count' do
-    forum = Forum.where(slug: 'all').first
-    member = Member.where(email: 'beth@halfsavage.com').first
-    assert_equal(forum.active_discussions_for_member(member).count ,  forum.active_discussion_count_for_member(member)  )
-  end 
-
-  test 'Special forum "most-active" - active_discussion_count_for_member should return correct count' do
-    forum = Forum.where(slug: 'created-by-member').first
-    member = Member.where(email: 'beth@halfsavage.com').first
-    assert_equal(forum.active_discussions_for_member(member).count ,  forum.active_discussion_count_for_member(member)  )
-  end  
-
-  test 'Special forum "created-by-member" - active_discussion_count_for_member should return correct count' do
-    forum = Forum.where(slug: 'all').first
-    member = Member.where(email: 'beth@halfsavage.com').first
-    assert_equal(forum.active_discussions_for_member(member).count ,  forum.active_discussion_count_for_member(member)  )
-  end
-
-  test 'Special forum "recently-viewed-by-member" - active_discussion_count_for_member should return correct count' do
-    forum = Forum.where(slug: 'recently-viewed-by-member').first
-    member = Member.where(email: 'beth@halfsavage.com').first
-    assert_equal(forum.active_discussions_for_member(member).count ,  forum.active_discussion_count_for_member(member)  )
-  end
-
-  test 'Special forum "newest" - active_discussion_count_for_member should return correct count' do
-    forum = Forum.where(slug: 'newest').first
-    member = Member.where(email: 'beth@halfsavage.com').first
-    assert_equal(forum.active_discussions_for_member(member).count ,  forum.active_discussion_count_for_member(member)  )
-  end
-
-  test 'Special forum "active-with-friends-of-member" - active_discussion_count_for_member should return correct count' do
-    forum = Forum.where(slug: 'active-with-friends-of-member').first
-    member = Member.where(email: 'beth@halfsavage.com').first
-    assert_equal(forum.active_discussions_for_member(member).count ,  forum.active_discussion_count_for_member(member)  )
-  end
 end
