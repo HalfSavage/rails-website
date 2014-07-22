@@ -29,10 +29,9 @@ module Halfsavage
 
     # There's a bug with schema_format = :sql in 4.0.0 thru 4.0.3
     # It always defaults to :ruby during rake:db:schema:dump
+    # ref: https://github.com/rails/rails/issues/14209
     # ref: https://github.com/rails/rails/pull/13312
-    # workaround: "rake db:rollback; rake db:migrate" will correctly produce a sql, not ruby, DB dump
-    # Should be fixed in 4.0.4
-    # UPDATE: Nope, still not fixed in 4.0.4 even though the above pull request was merged
+    # workaround: "rake db:structure:dump" instead of "rake:db:schema:dump"
     config.active_record.schema_format = :sql
     ActiveRecord::Base.schema_format = config.active_record.schema_format
 
