@@ -35,12 +35,6 @@ class Member < ActiveRecord::Base
     end
   end
 
-  def paid?
-    # Obviously, this code is just a placeholder until we have some kind of real payment system or whatever
-    return true if @paid.nil?
-    @paid
-  end
-
   def unpaid?
     !paid?
   end
@@ -57,6 +51,17 @@ class Member < ActiveRecord::Base
     !active
   end
 
+  def permission_to_send_message?
+    active? && (paid? || moderator?)
+  end 
+
+  def message_content_should_be_obscured?
+    unpaid? && not_moderator?
+  end 
+
+  def message_content_should_not_be_obscured?
+    !message_content_should_be_obscured
+  end 
 
   # For cached global objects whose content depends on their entitlements
   # Most obvious example is the forum list on the left side of the forums
