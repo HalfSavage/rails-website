@@ -25,6 +25,7 @@ class WeightedSeedCityGenerator
 
   def self.get_weighted_random_city() 
     city=nil
+    # TODO: This is really inefficient! 
     while city.nil?
       city = @@cities.sample 
       city = nil if rand(0..@@total_population) > city.population
