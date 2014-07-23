@@ -39,7 +39,6 @@ class MessageTest < ActiveSupport::TestCase
   test "unpaid member's messages should be obscured, unless they're from in moderator voice" do
     messages = Message.conversations_for_member(members(:unpaid_guy))
     ug = members(:unpaid_guy)
-    puts "unpaid_guy: obscure? #{ug.message_content_should_be_obscured?} paid? #{ug.paid?}"
     messages.each do |message| 
       if (!message.moderator_voice?) 
         assert message.obscure_content?, "Content should've been obscured"
@@ -48,34 +47,112 @@ class MessageTest < ActiveSupport::TestCase
         assert_not message.obscure_content?, "Content shouldn't have been obscured, it's mod voice" 
       end 
     end      
-    
   end
 
   test "paid member's messages should not be obscured" do 
     messages.each do |message| 
       assert_not message.obscure_content?, "Content shouldn't have been obscured, viewing member is paid" 
     end   
-
   end 
 
-  test "unpaid member shouldn't be able to read message unless it's a moderator voice message" do  
-  end
-
   test "non-mod shouldn't be able to send message in moderator voice" do 
+    m = Message.new({
+      member_from: members(:frida),
+      member_to: members(:edgar),
+      body: 'Blah blah blah blah blah',
+      message_type: message_types(:private_message),
+      moderator_voice: true
+    })
+    assert m.invalid?, "Non-mod shouldn't be allowed to send mod voice message"
   end 
 
   test "mod should be able to send message in moderator voice" do 
+    m = Message.new({
+      member_from: members(:manny_moderator),
+      member_to: members(:edgar),
+      body: 'Blah blah blah blah blah',
+      message_type: message_types(:private_message),
+      moderator_voice: true
+    })
+    assert m.valid?, "Mod should be allowed to send mod voice message"
   end 
 
   test "banned member shouldn't be able to send message" do 
+    m = Message.new({
+      member_from: members(:banned_member),
+      member_to: members(:edgar),
+      body: 'Blah blah blah blah blah',
+      message_type: message_types(:private_message)
+    })
+    assert m.invalid?, "Banned member shouldn't be able to send a message, yo"
   end 
 
-  test "banned moderator shouldn't be able to send message" do 
+  test "banned moderator shouldn't be able to send message" do
+    m = Message.new({
+      member_from: members(:banned_moderator),
+      member_to: members(:edgar),
+      body: 'Blah blah blah blah blah',
+      message_type: message_types(:private_message)
+    })
+    assert m.invalid?, "Banned moderator shouldn't be able to send a message"
   end     
 
+  test "paid, inactive member shouldn't be able to send message" do 
+    m = Message.new({
+      member_from: members(:paid_inactive_chick),
+      member_to: members(:edgar),
+      body: 'Blah blah blah blah blah',
+      message_type: message_types(:private_message)
+    })
+    assert m.invalid?, "Paid, inactive member shouldn't be able to send a message"
+  end 
+
+  test "unpaid member shouldn't be able to message mod that didn't mod-voice them" do 
+    m = Message.new({
+      member_from: members(:unpaid_guy),
+      member_to: members(:mindy_moderator),
+      body: 'Blah blah blah blah blah',
+      message_type: message_types(:private_message)
+    })
+    assert m.invalid?, "Unpaid member shouldn't be able to message mod that didn't mod-voice them"
+  end 
+
+  test "unpaid member should be able to sent mod that sent them mod message" do 
+    m = Message.new({
+      member_from: members(:unpaid_guy),
+      member_to: members(:manny_moderator),
+      body: 'Blah blah blah blah blah',
+      message_type: message_types(:private_message)
+    })
+    assert m.valid?, "Unpaid member should be able to message mod that mod-voiced them"
+  end 
+
   test "paid member shouldn't be able to message self" do 
+    m = Message.new({
+      member_from: members(:frida),
+      member_to: members(:frida),
+      body: 'Blah blah blah blah blah',
+      message_type: message_types(:private_message)
+    })
+    assert m.invalid?, "Paid member shouldn't be able to message self"
   end 
 
   test "paid member shouldn't be able to send message to nil user" do 
+    m = Message.new({
+      member_from: members(:frida),
+      body: 'Blah blah blah blah blah',
+      message_type: message_types(:private_message)
+    })
+    assert m.invalid?, "Paid member shouldn't be able to message nil user"
   end 
+
+  test "paid member shouldn't be able to send blank message" do 
+    m = Message.new({
+      member_from: members(:frida),
+      member_to: members(:gerta),
+      body: '    ',
+      message_type: message_types(:private_message)
+    })
+    assert m.invalid?, "Paid member shouldn't be able to send blank message"
+  end  
 end

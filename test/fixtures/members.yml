@@ -49,6 +49,58 @@ manny_moderator:
   email: mannythemoderator@halfsavage.com
   paid: true
 
+mindy_moderator:
+  username: MindyModerator
+  first_name: Mindy
+  last_name: Moderator
+  referred_by_id: 
+  date_of_birth: 1983-11-02 19:28:58
+  gender_id: 1
+  active: true
+  moderator: true
+  supermoderator: false
+  banned: false
+  vip: false
+  true_successor_to_hokuto_no_ken: false
+  visible_to_non_members: true
+  email: mindymoderator@halfsavage.com
+  paid: true
+
+mandy_moderator:
+  username: MandyModerator
+  first_name: Mandy
+  last_name: Moderator
+  referred_by_id: 
+  date_of_birth: 1983-11-02 19:28:58
+  gender_id: 1
+  active: true
+  moderator: true
+  supermoderator: false
+  banned: false
+  vip: false
+  true_successor_to_hokuto_no_ken: false
+  visible_to_non_members: true
+  email: mandymoderator@halfsavage.com
+  paid: true
+
+banned_moderator:
+  username: Banned
+  first_name: Moderator
+  last_name: Smith 
+  referred_by_id: 
+  date_of_birth: 1983-11-02 19:28:58
+  gender_id: 1
+  active: true
+  moderator: true
+  supermoderator: false
+  banned: true
+  vip: false
+  true_successor_to_hokuto_no_ken: false
+  visible_to_non_members: true
+  email: thebannedmoderator@halfsavage.com
+  paid: true
+
+
 albert:
   username: Albert
   first_name: Albert
@@ -184,3 +236,20 @@ unpaid_guy:
   visible_to_non_members: true
   email: unpaid_guy@halfsavage.com  
   paid: false
+
+paid_inactive_chick:
+  username: InactivePaidChick
+  first_name: InactivePaidChick
+  last_name: Smith 
+  referred_by_id: 
+  date_of_birth: 1985-11-02 19:28:58
+  gender_id: 1
+  active: false
+  moderator: false
+  supermoderator: false
+  banned: false
+  vip: false
+  true_successor_to_hokuto_no_ken: false
+  visible_to_non_members: true
+  email: paidinactivechick@halfsavage.com  
+  paid: true

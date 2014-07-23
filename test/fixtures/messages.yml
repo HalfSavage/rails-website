@@ -2,7 +2,6 @@
 # A number of the tests in message_test.rb depend on the number and order of
 # messages to/from Albert in fixtures one: through thirteen:
 
-
 one:
   member_from: albert
   member_to: beth 
@@ -125,6 +124,14 @@ doug_to_unpaid_guy:
   created_at: <%= Time.now %>
 
 moderator_to_unpaid_guy: 
+  member_from: manny_moderator  
+  member_to: unpaid_guy
+  message_type_id: 1
+  body: asd ckasdj cakj cakjsd caskdj csadkj caskdjc 
+  created_at: <%= Time.now %>
+  moderator_voice: false
+
+moderator_to_unpaid_guy_in_mod_voice: 
   member_from: manny_moderator  
   member_to: unpaid_guy
   message_type_id: 1

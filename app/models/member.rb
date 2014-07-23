@@ -51,8 +51,12 @@ class Member < ActiveRecord::Base
     !active
   end
 
-  def permission_to_send_message?
-    active? && (paid? || moderator?)
+  def may_not_send_message?
+    !may_send_message?
+  end 
+
+  def may_send_message?
+    active? && (!banned) && (paid? || moderator?)
   end 
 
   def message_content_should_be_obscured?
