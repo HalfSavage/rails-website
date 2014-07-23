@@ -49,7 +49,7 @@ GEM
       execjs
     coffee-script-source (1.7.1)
     columnize (0.8.9)
-    composite_primary_keys (7.0.4)
+    composite_primary_keys (7.0.6)
       activerecord (~> 4.1.4)
     daemons (1.1.9)
     debugger-linecache (1.2.0)
