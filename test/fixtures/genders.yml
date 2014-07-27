@@ -1,0 +1,14 @@
+male:
+  id: 1
+  gender_description: 'Male'
+  gender_abbreviation: 'M'
+
+female:
+  id: 2
+  gender_description: 'Female'
+  gender_abbreviation: 'F'
+
+complicated:
+  id: 3
+  gender_description: "It's complicated"
+  gender_abbreviation: ''
