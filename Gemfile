@@ -30,3 +30,4 @@ gem 'byebug', group: [:development, :test]
 # Used in seeds.rb to generate thread and message content
 gem 'marky_markov', group: [:development, :test]
 gem 'thin'
+gem 'less-rails'
