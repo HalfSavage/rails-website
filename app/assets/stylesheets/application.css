@@ -8,11 +8,10 @@
  * You're free to add application-wide styles to this file and they'll appear at the top of the
  * compiled file, but it's generally better to create a new file per style scope.
  *
+ *= require bootstrap/bootstrap.less
+ * require font-awesome/font-awesome.css
+ * require datepicker/datepicker.css
  *= require_self
- *= require flatly/bootstrap.min.css
- *= require flatly/flatly_overrides.css
- *= require font-awesome/font-awesome.css
- *= require datepicker/datepicker.css
  */
 
 #forum-list {
