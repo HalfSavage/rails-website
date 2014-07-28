@@ -1,6 +1,5 @@
 class Member < ActiveRecord::Base
   attr_accessor :login
-  attr_accessor :paid
 
   # Include default devise modules. Others available are:
   # :confirmable, :lockable, :timeoutable and :omniauthable
@@ -18,7 +17,6 @@ class Member < ActiveRecord::Base
   validates :email, uniqueness: {case_sensitive: false}
   validates :date_of_birth, presence: true
   validates :username, length: { minimum: 5, maximum: 30}
-
 
   # Scopes
   scope :moderators, -> { where(moderator: true) }
