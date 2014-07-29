@@ -31,3 +31,4 @@ gem 'byebug', group: [:development, :test]
 gem 'marky_markov', group: [:development, :test]
 gem 'thin'
 gem 'less-rails'
+gem 'spring', group: :development
