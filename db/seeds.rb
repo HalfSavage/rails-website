@@ -55,7 +55,7 @@ MAX_POST_LENGTH_CHARACTERS = 8000
 MARKOV_SENTENCES_TO_GENERATE = 500
 
 # If there are less private messages than this, create enough private messages to get to this total
-MINIMUM_PRIVATE_MESSAGES_COUNT = 2000
+MINIMUM_PRIVATE_MESSAGES_COUNT = 6000
 
 # These hashtags get inserted the most often. Some other words inside post bodies will get randomly
 # turned into hashtags too
@@ -245,12 +245,21 @@ def create_private_message(hs_messages,
     new_message.seen = rand(new_message.created_at..Time.now)
   end
 
+  # Roll the dice. Message deleted by recipient?
+  if rand(15) < 1
+    new_message.deleted_by_recipient = rand((new_message.seen || new_message.created_at)..Time.now)
+  end 
+
+  # Roll the dice. Message deleted by sender?
+  if rand(15) < 1
+    new_message.deleted_by_sender = rand(new_message.created_at..Time.now)
+  end 
+
   if new_message.member_from.moderator? and rand(2)==0
     new_message.moderator_voice = true
   end
 
-
-
+  new_message.ignore_sender_permissions = true 
   if new_message.invalid?
     puts "\nMessage can't be fucking saved!"
     puts new_message
@@ -260,7 +269,11 @@ def create_private_message(hs_messages,
     new_message.save
     num_replies.times { |x|
       print '.'
-      create_private_message hs_messages, message_created_at, Time.now, false, 0, id_to, id_from
+      if rand < 0.5
+        create_private_message hs_messages, message_created_at, Time.now, false, 0, id_to, id_from
+      else 
+        create_private_message hs_messages, message_created_at, Time.now, false, 0, id_from, id_to
+      end
     }
   end
 end
@@ -555,7 +568,7 @@ else
     i += 1
     print 'M'
     hs_messages = HalfSavageMessages.new  if (i % 10 == 0)
-    create_private_message hs_messages, earliest_message_time, latest_message_time, (rand(4)==0), [0,0,0,0,1,2,3,4].sample
+    create_private_message hs_messages, earliest_message_time, latest_message_time, (rand(4)==0), [0,0,0,0,1,2,3,4,10,20,30].sample
   end
   puts ' done creating fake messages'
 end
