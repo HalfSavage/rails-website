@@ -11,14 +11,14 @@ class MessageTest < ActiveSupport::TestCase
   end 
 
   test "should not return message deleted by sender when sender retrieves it" do 
-    messages = Message.conversations_for_member(members(:beth)) 
+    messages = Message.conversations_for_member members(:beth), {conversations_per_page: 9999, include_deleted: false}
     messages.each { |message|
       assert_not_equal message, messages(:message_deleted_by_sender), "Deleted message shouldn't show up in Beth's conversations"
     }
   end 
 
   test "should not return message deleted by recip when recip retrieves it" do 
-    messages = Message.conversations_for_member(members(:edgar)) 
+    messages = Message.conversations_for_member members(:edgar), {conversations_per_page: 9999, include_deleted: false}
     messages.each { |message|
       assert_not_equal message, messages(:message_deleted_by_recipient), "Deleted message shouldn't show up in Edgar's conversations"
     }
@@ -38,7 +38,6 @@ class MessageTest < ActiveSupport::TestCase
 
   test "unpaid member's messages should be obscured, unless they're from in moderator voice" do
     messages = Message.conversations_for_member(members(:unpaid_guy))
-    ug = members(:unpaid_guy)
     messages.each do |message| 
       if (!message.moderator_voice?) 
         assert message.obscure_content?, "Content should've been obscured"

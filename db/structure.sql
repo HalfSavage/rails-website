@@ -40,6 +40,99 @@ COMMENT ON EXTENSION pg_stat_statements IS 'track execution statistics of all SQ
 SET search_path = public, pg_catalog;
 
 --
+-- Name: conversations(integer, boolean); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION conversations(member_id integer, include_deleted boolean) RETURNS TABLE(conversation_number bigint, conversation_message_number bigint, conversation_latest_message_id integer, id integer, member_to_id integer, member_from_id integer, message_type_id integer, body character varying, seen timestamp without time zone, post_id integer, created_at timestamp without time zone, updated_at timestamp without time zone, deleted_by_sender timestamp without time zone, deleted_by_recipient timestamp without time zone, moderator_voice boolean)
+    LANGUAGE sql
+    AS $_$
+
+WITH mes_window 
+as (
+  select
+    row_number() over (partition by greatest(member_from_id,member_to_id),least(member_from_id,member_to_id) order by created_at desc) as conversation_message_number,
+    max(id) over (partition by greatest(member_from_id,member_to_id),least(member_from_id,member_to_id)) as conversation_latest_message_id,
+    mes.id,
+    mes.member_to_id,
+    mes.member_from_id,
+    mes.message_type_id,
+    mes.body,
+    mes.seen,
+    mes.post_id,
+    mes.created_at,
+    mes.updated_at,
+    mes.deleted_by_sender,
+    mes.deleted_by_recipient,
+    mes.moderator_voice
+	from
+	  messages mes
+	where
+	 $1 in (mes.member_to_id, member_from_id)
+   /*and (
+    (mes.member_from_id=$1 and (deleted_by_sender is null or $2=TRUE))
+    or
+    (mes.member_to_id=$1 and (deleted_by_recipient is null or $2=TRUE))
+    )
+*/
+  )
+
+select 
+  dense_rank() over (order by conversation_latest_message_id) as conversation_number,
+  *
+from 
+  mes_window
+
+$_$;
+
+
+--
+-- Name: conversations(integer, integer, boolean); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION conversations(member_id integer, member_id2 integer, include_deleted boolean) RETURNS TABLE(conversation_number bigint, conversation_message_number bigint, conversation_latest_message_id integer, id integer, member_to_id integer, member_from_id integer, message_type_id integer, body character varying, seen timestamp without time zone, post_id integer, created_at timestamp without time zone, updated_at timestamp without time zone, deleted_by_sender timestamp without time zone, deleted_by_recipient timestamp without time zone, moderator_voice boolean)
+    LANGUAGE sql
+    AS $_$
+
+WITH mes_window 
+as (
+  select
+    row_number() over (partition by greatest(member_from_id,member_to_id),least(member_from_id,member_to_id) order by created_at desc) as conversation_message_number,
+    max(id) over (partition by greatest(member_from_id,member_to_id),least(member_from_id,member_to_id)) as conversation_latest_message_id,
+    mes.id,
+    mes.member_to_id,
+    mes.member_from_id,
+    mes.message_type_id,
+    mes.body,
+    mes.seen,
+    mes.post_id,
+    mes.created_at,
+    mes.updated_at,
+    mes.deleted_by_sender,
+    mes.deleted_by_recipient,
+    mes.moderator_voice
+	from
+	  messages mes
+	where
+	 $1 in (mes.member_to_id, member_from_id)
+   and coalesce($2,-1) in (mes.member_to_id, mes.member_from_id, -1)
+   and (
+    (mes.member_from_id=$1 and (deleted_by_sender is null or $3=TRUE))
+    or
+    (mes.member_to_id=$1 and (deleted_by_recipient is null or $3=TRUE))
+    )
+
+  )
+
+select 
+  dense_rank() over (order by conversation_latest_message_id) as conversation_number,
+  *
+from 
+  mes_window
+
+$_$;
+
+
+--
 -- Name: discussions_active_friends(integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -107,6 +200,7 @@ CREATE FUNCTION discussions_refresh() RETURNS trigger
  END;
 $$;
 
+
 --
 -- Name: post_tags_replace(integer, character varying[]); Type: FUNCTION; Schema: public; Owner: -
 --
@@ -169,66 +263,6 @@ CREATE SEQUENCE addresses_id_seq
 --
 
 ALTER SEQUENCE addresses_id_seq OWNED BY addresses.id;
-
-
---
--- Name: messages; Type: TABLE; Schema: public; Owner: -; Tablespace: 
---
-
-CREATE TABLE messages (
-    id integer NOT NULL,
-    member_to_id integer,
-    member_from_id integer,
-    message_type_id integer,
-    body character varying(8000),
-    seen timestamp without time zone,
-    post_id integer,
-    created_at timestamp without time zone,
-    updated_at timestamp without time zone,
-    deleted_by_sender timestamp without time zone,
-    deleted_by_recipient timestamp without time zone,
-    moderator_voice boolean
-);
-
-
---
--- Name: conversations; Type: VIEW; Schema: public; Owner: -
---
-
-CREATE VIEW conversations AS
- WITH mes_window AS (
-         SELECT row_number() OVER (PARTITION BY GREATEST(mes.member_from_id, mes.member_to_id), LEAST(mes.member_from_id, mes.member_to_id) ORDER BY mes.created_at DESC) AS conversation_message_number,
-            max(mes.id) OVER (PARTITION BY GREATEST(mes.member_from_id, mes.member_to_id), LEAST(mes.member_from_id, mes.member_to_id)) AS conversation_latest_message_id,
-            mes.id,
-            mes.member_to_id,
-            mes.member_from_id,
-            mes.message_type_id,
-            mes.seen,
-            mes.post_id,
-            mes.created_at,
-            mes.updated_at,
-            mes.deleted_by_sender,
-            mes.deleted_by_recipient,
-            mes.moderator_voice,
-            "left"((mes.body)::text, 50) AS body
-           FROM messages mes
-        )
- SELECT dense_rank() OVER (ORDER BY mes_window.conversation_latest_message_id) AS conversation_number,
-    mes_window.conversation_message_number,
-    mes_window.conversation_latest_message_id,
-    mes_window.id,
-    mes_window.member_to_id,
-    mes_window.member_from_id,
-    mes_window.message_type_id,
-    mes_window.seen,
-    mes_window.post_id,
-    mes_window.created_at,
-    mes_window.updated_at,
-    mes_window.deleted_by_sender,
-    mes_window.deleted_by_recipient,
-    mes_window.moderator_voice,
-    mes_window.body
-   FROM mes_window;
 
 
 --
@@ -365,7 +399,7 @@ CREATE VIEW posts_last_replies_with_usernames AS
             p.member_id
            FROM posts p
           WHERE (((p.parent_id IS NOT NULL) AND (p.deleted = false)) AND (p.private_moderator_voice = false))) p_last_replies
-   JOIN members m ON ((p_last_replies.member_id = m.id)))
+     JOIN members m ON ((p_last_replies.member_id = m.id)))
   WHERE (p_last_replies.reply_number = 1);
 
 
@@ -392,10 +426,10 @@ CREATE MATERIALIZED VIEW discussions AS
     ''::text AS usernames,
     (0.0)::double precision AS score
    FROM ((((posts p
-   JOIN forums_posts fp ON ((p.id = fp.post_id)))
-   JOIN forums f ON ((fp.forum_id = f.id)))
-   JOIN members m ON ((p.member_id = m.id)))
-   LEFT JOIN posts_last_replies_with_usernames plr ON ((p.id = plr.parent_id)))
+     JOIN forums_posts fp ON ((p.id = fp.post_id)))
+     JOIN forums f ON ((fp.forum_id = f.id)))
+     JOIN members m ON ((p.member_id = m.id)))
+     LEFT JOIN posts_last_replies_with_usernames plr ON ((p.id = plr.parent_id)))
   WHERE ((p.parent_id IS NULL) AND (p.deleted = false))
   WITH NO DATA;
 
@@ -425,7 +459,7 @@ CREATE VIEW discussions_fast AS
     p.id,
     p.member_id
    FROM (posts p
-   JOIN forums_posts fp ON ((p.id = fp.post_id)))
+     JOIN forums_posts fp ON ((p.id = fp.post_id)))
   WHERE ((p.parent_id = p.id) AND (p.deleted = false));
 
 
@@ -610,6 +644,26 @@ CREATE SEQUENCE message_types_id_seq
 --
 
 ALTER SEQUENCE message_types_id_seq OWNED BY message_types.id;
+
+
+--
+-- Name: messages; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE TABLE messages (
+    id integer NOT NULL,
+    member_to_id integer,
+    member_from_id integer,
+    message_type_id integer,
+    body character varying(8000),
+    seen timestamp without time zone,
+    post_id integer,
+    created_at timestamp without time zone,
+    updated_at timestamp without time zone,
+    deleted_by_sender timestamp without time zone,
+    deleted_by_recipient timestamp without time zone,
+    moderator_voice boolean
+);
 
 
 --
@@ -870,14 +924,14 @@ CREATE VIEW tags_trending AS
             ELSE ((1)::double precision + ((100.0)::double precision / ((date_part('epoch'::text, now()) - date_part('epoch'::text, pt.created_at)) / (7200.0)::double precision)))
         END) AS score
    FROM ((post_tags pt
-   JOIN forums_posts fp ON ((pt.post_id = fp.post_id)))
-   JOIN tags t ON ((pt.tag_id = t.id)))
+     JOIN forums_posts fp ON ((pt.post_id = fp.post_id)))
+     JOIN tags t ON ((pt.tag_id = t.id)))
   GROUP BY pt.tag_id, t.tag_text
   ORDER BY sum(
-CASE
-    WHEN ((date_part('epoch'::text, now()) - date_part('epoch'::text, pt.created_at)) < (7200)::double precision) THEN (100.0)::double precision
-    ELSE ((1)::double precision + ((100.0)::double precision / ((date_part('epoch'::text, now()) - date_part('epoch'::text, pt.created_at)) / (7200.0)::double precision)))
-END) DESC
+        CASE
+            WHEN ((date_part('epoch'::text, now()) - date_part('epoch'::text, pt.created_at)) < (7200)::double precision) THEN (100.0)::double precision
+            ELSE ((1)::double precision + ((100.0)::double precision / ((date_part('epoch'::text, now()) - date_part('epoch'::text, pt.created_at)) / (7200.0)::double precision)))
+        END) DESC
  LIMIT 100;
 
 
@@ -896,14 +950,14 @@ CREATE VIEW tags_trending_by_forum AS
             ELSE ((1)::double precision + ((100.0)::double precision / ((date_part('epoch'::text, now()) - date_part('epoch'::text, pt.created_at)) / (7200.0)::double precision)))
         END) AS score
    FROM ((post_tags pt
-   JOIN forums_posts fp ON ((pt.post_id = fp.post_id)))
-   JOIN tags t ON ((pt.tag_id = t.id)))
+     JOIN forums_posts fp ON ((pt.post_id = fp.post_id)))
+     JOIN tags t ON ((pt.tag_id = t.id)))
   GROUP BY fp.forum_id, pt.tag_id, t.tag_text
   ORDER BY sum(
-CASE
-    WHEN ((date_part('epoch'::text, now()) - date_part('epoch'::text, pt.created_at)) < (7200)::double precision) THEN (100.0)::double precision
-    ELSE ((1)::double precision + ((100.0)::double precision / ((date_part('epoch'::text, now()) - date_part('epoch'::text, pt.created_at)) / (7200.0)::double precision)))
-END) DESC
+        CASE
+            WHEN ((date_part('epoch'::text, now()) - date_part('epoch'::text, pt.created_at)) < (7200)::double precision) THEN (100.0)::double precision
+            ELSE ((1)::double precision + ((100.0)::double precision / ((date_part('epoch'::text, now()) - date_part('epoch'::text, pt.created_at)) / (7200.0)::double precision)))
+        END) DESC
  LIMIT 100;
 
 
@@ -1341,6 +1395,12 @@ CREATE UNIQUE INDEX unique_schema_migrations ON schema_migrations USING btree (v
 --
 
 CREATE TRIGGER post_insert_trigger_discussions AFTER INSERT ON posts FOR EACH ROW EXECUTE PROCEDURE discussions_refresh();
+
+
+--
+-- Name: post_update_trigger_discussions; Type: TRIGGER; Schema: public; Owner: -
+--
+
 CREATE TRIGGER post_update_trigger_discussions AFTER UPDATE ON posts FOR EACH ROW EXECUTE PROCEDURE discussions_refresh();
 
 

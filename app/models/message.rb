@@ -1,4 +1,7 @@
 class Message < ActiveRecord::Base
+
+  attr_accessor :ignore_sender_permissions 
+
 	belongs_to :member_from, class_name: 'Member', foreign_key: 'member_from_id'
   belongs_to :member_to, class_name: 'Member', foreign_key: 'member_to_id'
   belongs_to :message_type
@@ -21,36 +24,46 @@ class Message < ActiveRecord::Base
   end 
 
   # Excludes deleted messages
-  def self.conversations_for_member(member, viewing_member = nil)
-    member_id = (member.is_a? Member) ? member.id : member 
-    viewing_member = viewing_member || ((member.is_a? Member) ? member : Member.find(member_id))
+  # def self.conversations_for_member(member, viewing_member = nil, page_number = 1, conversations_per_page = 10, include_deleted = false)
+  def self.conversations_for_member(member, options = {})
+    options = {
+      viewing_member: nil,
+      page_number: 1,
+      conversations_per_page: 10,
+      include_deleted: false,
+      eager_load: true,
+      messages_per_conversation: 3
+      }.merge(options)
 
-    messages = Message.find_by_sql ["select * from conversations 
+    member_id = (member.is_a? Member) ? member.id : member 
+    viewing_member = options[:viewing_member] || ((member.is_a? Member) ? member : Member.find(member_id))
+    messages = Message.find_by_sql ["select * from conversations(:member_id, null, :include_deleted) 
       where 
-        (member_to_id=:member_id or member_from_id=:member_id) 
-        and ((member_to_id=:member_id and deleted_by_recipient is null) or (member_from_id=:member_id and deleted_by_sender is null))
-        and conversation_message_number <=3
-      order by conversation_number, conversation_message_number", member_id: member_id]
-    messages.each { |m| m.viewing_member = viewing_member } 
+        conversation_message_number <=#{options[:messages_per_conversation]}
+        and (conversation_number between :first_conversation and :last_conversation)
+      order by conversation_number, conversation_message_number", 
+      member_id: member_id, 
+      first_conversation: (1 + (options[:page_number]-1) * options[:conversations_per_page]), 
+      last_conversation: (options[:conversations_per_page] * options[:page_number]), 
+      include_deleted: options[:include_deleted]]
+    messages.each { |m| m.viewing_member = viewing_member } if viewing_member 
+
+    ActiveRecord::Associations::Preloader.new.preload(messages, [:member_from, :member_to, :post, :message_type]) if options[:eager_load]
+
+    messages
   end 
 
-  def self.conversation_for_members(member, other_member)
+  def self.conversation_for_members(member, other_member, include_deleted = false)
     member_id = (member.is_a? Member) ? member.id : member 
     other_member_id = (other_member.is_a? Member) ? other_member.id : other_member
     
-    messages = conversation_for_members_include_deleted(member_id, other_member_id)
-    messages.where("((member_to_id=:member and deleted_by_recipient is null) or (member_from_id=:other_member_id and deleted_by_sender is null))")
+    # 
+    messages = Message.find_by_sql ["select * from conversations(:member_id, :other_member_id, :include_deleted) 
+      where 
+        and conversation_message_number <=3
+        and (conversation_number between :first_conversation and :last_conversation)
+      order by conversation_number", member_id: member_id, other_member_id: other_member_id, include_deleted: include_deleted.to_s.upcase]
     messages.each { |m| m.viewing_member = member } 
-  end 
-
-  def self.conversation_for_members_include_deleted(member, other_member)
-    member_id = (member.is_a? Member) ? member.id : member 
-    other_member_id = (other_member.is_a? Member) ? other_member.id : other_member
-
-    Message.where("(member_to_id in (:member_id,:other_member_id) and member_from_id in (:member_id,:other_member_id))",
-      member_id: member_id,
-      other_member_id: other_member_id
-      ).order(created_at: :desc)
   end 
 
   def self.find_for_member(member, id)
@@ -73,11 +86,9 @@ class Message < ActiveRecord::Base
     errors.add(:member_to, "You're messaging yourself? Are you feeling okay?") if member_to==member_from
   end 
 
-
-
-
   def validate_sender_has_permission_to_send
-    return true if !new_record?
+    return if @ignore_sender_permissions
+    return if !new_record?
     if !member_from.may_send_message?
       if member_from.inactive?
         errors.add(:base, "You don't have permission to send a message, since youre account is not not active.") 
@@ -90,7 +101,7 @@ class Message < ActiveRecord::Base
       if member_from.unpaid?
         # Special exception: if a mod has mod-voiced them, they may message back
         return true if Message.where(member_to: member_from, member_from: member_to, moderator_voice: true).any?
-        errors.add(:base, "You may not send a private message without a paid account") 
+        errors.add(:base, "You may not send a private message without a paid account @ignore_sender_permissions: #{@ignore_sender_permissions}") 
         return false
       end 
       errors.add(:base, "You don't have permission to send a message right now.")
