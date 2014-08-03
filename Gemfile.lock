@@ -50,8 +50,6 @@ GEM
     coffee-script-source (1.7.1)
     columnize (0.8.9)
     commonjs (0.2.7)
-    composite_primary_keys (7.0.7)
-      activerecord (~> 4.1.4)
     daemons (1.1.9)
     debugger-linecache (1.2.0)
     debugging (1.0.1)
@@ -207,7 +205,6 @@ DEPENDENCIES
   awesome_print
   byebug
   coffee-rails (~> 4.0.0)
-  composite_primary_keys (~> 7.0.2)
   devise (>= 3.2.0)
   hirb
   irbtools
