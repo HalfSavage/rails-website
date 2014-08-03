@@ -5,15 +5,15 @@ require 'active_support/core_ext/integer'
 class HalfSavageMessages 
   def initialize 
 
-    @properties = ['Star Wars','Gundam','Evangelion','My Little Pony','Schindler\'s List', 'Lord of The Rings','Pokemon','Call Of Duty','Final Fantasy','Dragon Quest','the Cosby Show','Dukes of Hazzard','Twilight','Back To The Future','Sweet Valley High','Star Trek','One Piece','Hellsing', 'Trigun', 'Firefly']
-    @mediums = ['comic','game','novel','memory implant chip','graphic novel','comic','t-shirt collection','fan-fiction masterpiece']
+    @properties = ['Castlevania','Hunger Games','Harry Potter','Game of Thrones','Star Wars','Gundam','Evangelion','My Little Pony','Schindler\'s List', 'Lord of The Rings','Pokemon','Call Of Duty','Final Fantasy','Dragon Quest','the Cosby Show','Dukes of Hazzard','Twilight','Back To The Future','Sweet Valley High','Star Trek','One Piece','Hellsing', 'Trigun', 'Firefly']
+    @mediums = ['erotic','comic','game','novel','memory implant chip','graphic novel','comic','t-shirt collection','fan-fiction masterpiece']
     @verbs_current = %w{reading eating fucking loving hating excreting secreting sexually\ obsessed\ with\ buying missing}
     @verbs_past = %w{fondled loved stalked touched ate\ out fucked loved hated congratulated gently\ fingerbanged cuddled\ with}
     @verbs_person =%w{marry punch relate\ to love neuter worship excite talk\ to touch praise yell\ at}
     @superlatives = %w{latest first worst best most\ erotic drunkest corniest most}
     @impulsive_adjectives = %w{impulse desperation}
     @vices_plural = %w{handfulls\ of\ random\ pills beers hits\ of\ crack drinks whiffs\ of\ jenkam tabs\ of\ LSD bong\ rips cosmopolitans chugs\ of\ corn\ liquor}
-    @instruments = %w{keytar guitar piano glockenspiel cello clarinet clavichord conga drum contrabassoon cornet cymbals double\ bass dynamophone flute glockenspiel gongs guitar harmonica harp harpsichord lute mandolin maracas metallophone musical\ box oboe piano recorder saxophone shawm snare\ drum steel\ drum tambourine theremin trombone trumpet tuba ukulele viola violin xylophone zither}
+    @instruments = %w{keytar guitar piano glockenspiel cello clarinet clavichord conga drum contrabassoon cornet cymbals double\ bass dynamophone flute glockenspiel gongs guitar harmonica harp harpsichord lute mandolin maracas metallophone musical\ box oboirbe piano recorder saxophone shawm snare\ drum steel\ drum tambourine theremin trombone trumpet tuba ukulele viola violin xylophone zither}
     @foods = %w{Twinkies Pocky Hot\ Pockets greasy\ convenience\ store\ food questionably-sourced\ salami scraps\ of\ lunch\ meat pork\ chops BBQ\ potato\ chips chocolate cinnamon clam\ chowder cloves peach\ cobbler coconut\ cream cream\ cheese crepe ucumber cupcakes curds currants curry custard lamb lard lasagna legumes pancakes fruity\ tropical\ bullshit pastry liver\ pate chocolate\ sprinkles french\ fries ramen\ noodles beef\ stew stir-fry strawberry Pop-Tarts teriyaki thyme toast toffee}
     @food_types = %w{pancakes sandwiches soup ice\ cream dumplings latkes paella}
     @verbs_food_cooking_current =  %w{frying baking boiling toasting deep-frying slow-roasting}
@@ -77,11 +77,12 @@ class HalfSavageMessages
       "#{['You need to', 'Please', 'Hey! Need you to'].sample} #{%w{start stop}.sample} trying to #{%w{impregnate contact write message call}.sample} me. You are #{['scary','probably contagious','my sibling','the smelliest person on Earth','a few sandwiches short of a picnic','probably a murderer','so intensely sexual that my genitals are about to combust'].sample}.",
       "I love you. Forever and always.",
       "Just wondering how things are going.",
+      "#{['My friends','My mom','My cat','You'].sample} #{%w{dared commanded asked paid}.sample} me to sign up for this website#{['. It''s been ok so far.',' and I think I caught HIV in the first ten minutes.',' so here''s a message for you.'].sample}",
       "#{['Honestly,','Frankly,','I have to say --','Surprisingly,','Now that we did some kissing'].sample} I'm not mad that you #{['stabbed me','dumped me','stole my car','built a life-size replica of me out of Legos','banged my friend'].sample}, even if it's a little #{%w{weird odd confusing}.sample}."
     ]
 
     @post_reply_sentence_templates = [
-      "I #{['slowly ','eagerly ','methodically ','totally ','violently','messily','','','',''].sample}#{['jerked off to', 'read', 'absorbed', 'read and barely understood (yet thoroughly enjoyed)', 'consumed'].sample} #{['the latest incoherent mess you posted in the forums', 'the brilliant thing you said', 'that post you made', 'the bullshit you posted', 'the knowledge you dropped in the forums', 'the thing you said', 'your incessant blabbering'].sample} and it made me want to #{['kiss you', 'rub my nipples all over you', 'become a robot', 'have a sex change', 'touch myself in forbidden ways', 'punch myself in the face', 're-examine some things inside of myself, spiritually speaking','forget about it as soon as possible', 'travel back in time and murder you before you had a chance to post it', 'be a better person'].sample}.",
+      "I #{['slowly ','eagerly ','methodically ','totally ','violently','messily','','','',''].sample} #{['jerked off to', 'read', 'absorbed', 'read and barely understood (yet thoroughly enjoyed)', 'consumed'].sample} #{['the latest incoherent mess you posted in the forums', 'the brilliant thing you said', 'that post you made', 'the bullshit you posted', 'the knowledge you dropped in the forums', 'the thing you said', 'your incessant blabbering'].sample} and it made me want to #{['kiss you', 'rub my nipples all over you', 'become a robot', 'have a sex change', 'touch myself in forbidden ways', 'punch myself in the face', 're-examine some things inside of myself, spiritually speaking','forget about it as soon as possible', 'travel back in time and murder you before you had a chance to post it', 'be a better person'].sample}.",
       "This post made me think about the time I #{@person_to_person_activities.sample} #{['my','your','a','somebody\'s'].sample} #{(['','','','','',''] + @personal_qualities).sample} #{@type_of_person.sample} back in #{@places_proper.sample}.",
       "It was #{['not very','super','very','mega'].sample} #{['brave','inspirational','sexual','hot','thoughtful'].sample} of you to share this in your post.",
       "#{['Sitting', 'As I ponder the end of the universe', 'Despite having only two weeks to live', 'With the help of somebody who understands big words','Buried in cat feces','Alone, so alone','Surrounded by the trappings of success'].sample} here in my #{@rooms.sample}#{[' and probably because I\'m really drunk', ' and even though I\'m hooked up to some kind of crazy cyborg life-saving machines', ' and even though I\'m so hungover that I think I will die',' and even though I\'m a real joyless asshole who has no emotions',' and despite giving up on life once I found every single Pokemon','','','','','',''].sample}, #{['I laughed out loud','I cried','I nearly punched my mom','tears rolled down my cheeks','I took a massive bong rip','I literally shit my pants'].sample} when I read this post#{%w{! . ??}.sample}",
@@ -145,7 +146,7 @@ class HalfSavageMessages
       "#{['Obviously,', 'Hopefully', 'Eventually,', 'Surely', 'By the will of Allah,', 'By great Odin\'s beard,', 'Pretty sure'].sample} you'll want to #{@verbs_person.sample} me.",
       "#{['Just so you know...', 'You seem cool but', 'Since I like you', 'With good looks like these, you better believe'].sample} I'm #{['not trying','trying','expecting'].sample} to #{['buy', 'beg for', 'give you probably fifty bucks for', 'earn', 'give you', 'get', 'allow you to give me'].sample} a #{@sexual_noun.sample} #{['on the first date', 'because what else are we going to do... talk? Yeah, right', 'unless I get cash up front', 'unless you\'re not into that','before we do any kissing', '...because that is the way of my people'].sample}.",
       "#{['You know I love', 'Some of my happiest memories involve', 'I really miss', 'I am totally into'].sample} #{['discussing', 'dissing', 'debating', 'pondering', 'yelling loudly about', 'jerking off to', 'laughing at'].sample} #{(@properties + @academic_topics).sample} together, especially when #{["I've","you've","we've"].sample} had #{['a few', 'countless', 'one or two', 'a near-fatal amount of', 'some'].sample} #{(@vices_plural).sample}.",
-      "I've been thinking about you ever since you told me I #{['should learn more about','was a real fucking whiz at','could never hope to understand','look like the kind of asshole who\'s into'].sample} #{(@academic_topics + @programming_languages).sample} and that you #{@verbs_past.sample} my #{(@related_person + @animals).sample}#{[' in a creepy way',' after I passed out',' and got a weird skin rash','','','',''].sample}. Know what? You were #{['probably doing the right thing','so right', 'so wrong', 'a fucking prophet', 'wrong as usual', 'really insightful', 'a big inspiration for my current success'].sample}.",
+      "#{['I''ve','I''ve','People have','My brother has','Lots of bitches have'].sample} been #{['thinking about','intrigued by','mildly infatuated by','training to defeat'].sample} you ever since you told me I #{['should learn more about','was a real fucking whiz at','could never hope to understand','look like the kind of asshole who\'s into'].sample} #{(@academic_topics + @programming_languages).sample} and that you #{@verbs_past.sample} my #{(@related_person + @animals).sample}#{[' in a creepy way',' after I passed out',' and got a weird skin rash','','','',''].sample}. Know what? You were #{['probably doing the right thing','so right', 'so wrong', 'a fucking prophet', 'wrong as usual', 'really insightful', 'a big inspiration for my current success'].sample}.",
       "#{['Sometimes,','Thanks to you,','On another topic,','I haven\'t told anybody this yet, but'].sample} I wonder if #{['I', 'my ' + (@dogs + @related_person).sample].sample} #{['should convert to','is obsessed with', 'should be so sexually aroused by','could have some kind of allergy to','might have a thing for'].sample} #{['Scientology', 'rough sex', 'polyamory', 'Islam','Christianity','Buddhism','being a robot','Linux'].sample}. #{['You always make it look like fun.','I would probably get laid more.','I have absolutely nothing better to do, so why not?', "It wouldn't be the weirdest thing that happened this week, that's for sure.", "", "", ""].sample}",
       "I have a lot of #{@emotions.sample}.",
       "Do you know much about #{@academic_topics.sample}? #{['I know I do.', 'I doubt it!', 'I bet you do!', 'You are amazing in a lot of little ways like that.', 'Somebody told me you do, and I called bullshit.', 'I don\'t really care, actually. I was just asking to be polite, but you can still answer if you want. (I won\'t read it though)'].sample}",
@@ -269,12 +270,11 @@ class HalfSavageMessages
       puts "Template: #{template}"
       puts "Error: #{e}"
     end
-    text[0] = text[0].capitalize 
+    text[0] = text[0].capitalize.gsub(/\s([A])(\s[aAeEiIoOuU]\w)/,' An\2').gsub(/\s([a])(\s[aAeEiIoOuU]\w)/,' an\2') 
     text
   end 
 end 
 
-=begin
 hsm = HalfSavageMessages.new 
 
 puts "---Post replies---"
@@ -295,4 +295,3 @@ hsm.test_sentence_templates
   puts "\n---Post reply message body (~#{x} sentences)---"
   puts hsm.get_private_message_post_reply_body(x..x)
 }
-=end

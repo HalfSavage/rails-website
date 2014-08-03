@@ -55,7 +55,7 @@ MAX_POST_LENGTH_CHARACTERS = 8000
 MARKOV_SENTENCES_TO_GENERATE = 500
 
 # If there are less private messages than this, create enough private messages to get to this total
-MINIMUM_PRIVATE_MESSAGES_COUNT = 6000
+MINIMUM_PRIVATE_MESSAGES_COUNT = 8000
 
 # These hashtags get inserted the most often. Some other words inside post bodies will get randomly
 # turned into hashtags too
@@ -567,7 +567,7 @@ else
     # print "#{i}... " if (i == 1) || (i % 10 == 0)
     i += 1
     print 'M'
-    hs_messages = HalfSavageMessages.new  if (i % 10 == 0)
+    hs_messages = HalfSavageMessages.new  if (i % 20 == 0)
     create_private_message hs_messages, earliest_message_time, latest_message_time, (rand(4)==0), [0,0,0,0,1,2,3,4,10,20,30].sample
   end
   puts ' done creating fake messages'
