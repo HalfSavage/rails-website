@@ -1,6 +1,7 @@
-include ActionView::Helpers # we need the truncate function
 
 class Post < ActiveRecord::Base
+  include ActionView::Helpers # we need the truncate function
+
   # The parent could be the OP or another post in that thread, if
   # it's a nested reply
   belongs_to :parent, class_name: 'Post'
