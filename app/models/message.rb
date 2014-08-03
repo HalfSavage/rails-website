@@ -15,7 +15,7 @@ class Message < ActiveRecord::Base
   validate :validate_sender_is_moderator
   validate :validate_not_messaging_self
 
-  attr_accessor :viewing_member 
+  attr_accessor :viewing_member # assumed to be the same as the person we're viewing messages for, unless a value supplied
 
   def obscure_content? 
     return nil if @viewing_member.nil? # We don't know who's viewing, so we can't say
@@ -23,8 +23,15 @@ class Message < ActiveRecord::Base
     @viewing_member.message_content_should_be_obscured?
   end 
 
-  # Excludes deleted messages
-  # def self.conversations_for_member(member, viewing_member = nil, page_number = 1, conversations_per_page = 10, include_deleted = false)
+  def self.conversation_count_for_member(member, options = {})
+    options = {
+      include_deleted: false,
+      }.merge(options)
+    member_id = (member.is_a? Member) ? member.id : member 
+    result = ActiveRecord::Base.connection.execute("select max(conversation_number) as the_count from conversations(#{member_id.to_i}, null, 'f');");
+    result[0]["the_count"].to_i
+  end 
+
   def self.conversations_for_member(member, options = {})
     options = {
       viewing_member: nil,
@@ -35,6 +42,7 @@ class Message < ActiveRecord::Base
       messages_per_conversation: 3
       }.merge(options)
 
+    options[:page_number] = options[:page_number] || 1
     member_id = (member.is_a? Member) ? member.id : member 
     viewing_member = options[:viewing_member] || ((member.is_a? Member) ? member : Member.find(member_id))
     messages = Message.find_by_sql ["select * from conversations(:member_id, null, :include_deleted) 
@@ -49,7 +57,6 @@ class Message < ActiveRecord::Base
     messages.each { |m| m.viewing_member = viewing_member } if viewing_member 
 
     ActiveRecord::Associations::Preloader.new.preload(messages, [:member_from, :member_to, :post, :message_type]) if options[:eager_load]
-
     messages
   end 
 
@@ -57,7 +64,6 @@ class Message < ActiveRecord::Base
     member_id = (member.is_a? Member) ? member.id : member 
     other_member_id = (other_member.is_a? Member) ? other_member.id : other_member
     
-    # 
     messages = Message.find_by_sql ["select * from conversations(:member_id, :other_member_id, :include_deleted) 
       where 
         and conversation_message_number <=3
