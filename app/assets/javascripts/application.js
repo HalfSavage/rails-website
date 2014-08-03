@@ -27,3 +27,4 @@
 //= require bootstrap/affix
 
 //= require bootstrap-datepicker
+//= require holder
