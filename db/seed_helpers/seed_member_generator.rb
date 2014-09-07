@@ -2,7 +2,32 @@ require_relative "weighted_seed_city_generator"
 
 class SeedMemberGenerator
 
-    def self.generate(hs_usernames, gender, min_age_years, max_age_years, max_account_age_days, chance_of_member_referral, chance_of_being_paid)
+    def self.array_from_file(path)
+      a = []
+      File.open(path, 'r') do |f1|
+        while line = f1.gets
+          a << line.chomp
+        end
+      end
+      a
+    end 
+
+    @@male_names = array_from_file('db/seed_helpers/male_names.txt') 
+    @@female_names = array_from_file('db/seed_helpers/female_names.txt') 
+    @@neutral_names = array_from_file('db/seed_helpers/neutral_names.txt') 
+    
+    def self.random_name(gender_id)
+      case gender_id 
+      when 1
+        return @@male_names.sample
+      when 2 
+        return @@female_names.sample
+      when 3
+        return @@neutral_names.sample
+      end
+    end 
+
+    def self.generate(hs_usernames, gender, min_age_years, max_age_years, max_account_age_days, chance_of_member_referral, chance_of_being_paid, chance_of_having_first_name)
       new_member = Member.new(
         :gender => gender,
         :password => 'password',
@@ -27,6 +52,11 @@ class SeedMemberGenerator
       if rand(0.0..1.0) <= chance_of_member_referral then
         new_member.referred_by = Member.where("created_at < ?", new_member.created_at).order("RANDOM()").first
       end
+
+      
+      new_member.first_name = random_name(new_member.gender_id) if rand(0.0..1.0) <= chance_of_having_first_name
+
+
 
       new_member.paid = (rand < chance_of_being_paid)
 

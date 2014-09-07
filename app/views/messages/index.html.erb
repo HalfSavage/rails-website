@@ -1,0 +1,71 @@
+<% content_for :title  do "Messages" end %>
+
+  <div class="row">
+    <div class="col-md-12">
+      <p>
+      <%= page_links(
+            current_page_number: params[:page], 
+            total_items: @conversation_count, 
+            items_per_page: 10, 
+            url: "/messages?page=[[page]]") %>
+      </p>
+      <% 
+      convos = @messages.group_by { |c| c.conversation_number }
+      convos.each_value do |convo|
+      %>
+        <div class="row conversations" data-conversation-with="<%=convo[0].other_member.username_slug %>">
+          <div class="col-md-1">
+            <img data-src="holder.js/48x48/gray">
+          </div>
+          <div class="col-md-11 conversation-previews">
+          <h6><%= member_link(convo[0].other_member, include_first_name: true) %></h6>
+          <% convo.each do |message|
+            %>
+            <a class="message-link" href="/conversations/<%=convo[0].other_member.username_slug%>">
+            <div class="pull-right muted"><%= time_ago_in_words_short(message.created_at) %></div>
+            <% if message.member_from == current_member %>
+              <p class="from-me">
+                <% if message.moderator_voice? then %> <span class="label label-warning">Moderator Message</span> <% end %>
+                You: <%= message.body.gsub("\n",' ').gsub(/\s{2,}/,' ') %>
+              </p>
+            <% else %>
+              <p class="from-them">
+                <% if message.moderator_voice? then %> <span class="label label-warning">Moderator Message</span> <% end %>
+                <%= message.body %>
+              </p>
+            <% end %> 
+            <div class="message-preview-fade">
+
+            </div>
+            </a>
+          <% end %>
+          </div>
+        </div>
+      <%
+      end 
+      %> 
+      <p>
+      <%= page_links(
+            current_page_number: params[:page], 
+            total_items: @conversation_count, 
+            items_per_page: 10, 
+            url: "/messages?page=[[page]]") %>
+      </p>
+    </div>
+  </div>
+
+
+<% content_for :page_bottom_script do %>
+<script type="text/javascript">
+  
+  $(function(){
+    $('[data-conversation-with]').click(function(e) {
+      navigateToConversation(e);
+    });
+  });
+
+  function navigateToConversation(e) {
+    window.location.href='/conversations/' + $(e.currentTarget).data('conversation-with');
+  }
+</script>
+<% end %>

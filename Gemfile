@@ -25,10 +25,11 @@ gem "schema_plus"
 gem 'quiet_assets', :group => :development
 gem 'will_paginate', '~> 3.0'
 gem 'will_paginate-bootstrap'
-# gem 'composite_primary_keys', '~> 7.0.2'
+gem 'composite_primary_keys', '~> 7.0.2'
 gem 'byebug', group: [:development, :test]
 # Used in seeds.rb to generate thread and message content
 gem 'marky_markov', group: [:development, :test]
-gem 'thin'
+# Thin doesn't work if you have HTTP pipelining enabled in Firefox
+# gem 'thin'
 gem 'less-rails'
 gem 'spring', group: :development

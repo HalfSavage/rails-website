@@ -1,0 +1,95 @@
+@import "../flatly/variables.less";
+/* Begin Flatly overrides */
+@gray-lightest: lighten(#ecf0f1, 4%); /* End Flatly overrides */
+.pagination {
+  float: right;
+  font-size: 13px;
+  text-align: right;
+}
+.controller-forums {
+  #forum-list {
+    width: 20%;
+    float: left;
+  }
+  #discussions {
+    float: left;
+    font-size: 14px;
+    margin-left: 2em;
+    width: 70%;
+  }
+  #discussions .discussion p {
+    padding-left: 1em;
+  }
+  #discussions .discussion h4 {
+    margin-bottom: 0.25em;
+    margin-top: 1em;
+  }
+  #discussions .discussion h4 small {
+    color: #666;
+  }
+  #discussions h5 {
+    margin-bottom: 0.2em;
+  }
+  #discussions > div {
+    clear: both;
+  }
+  .discussion-quote {
+    font-size: 13px;
+    font-style: italic;
+    line-height: 1.3em;
+    overflow: hidden;
+    padding-bottom: 0;
+    margin-bottom: 0;
+    white-space: nowrap;
+  }
+  .discussion-quote-fade {
+    padding-top: 0;
+    margin-top: -1.3em;
+    background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 1) 60%, rgba(255, 255, 255, 1) 99%); /* W3C */
+    opacity: 0.5;
+    height: 1.3em;
+  }
+}
+.controller-messages {
+  .conversations {
+    clear: both;
+    font-size: 14px;
+    padding: 0.5em 0;
+  }
+  .conversations:hover {
+    /* background-color: @gray-lightest; */
+    background: linear-gradient(to right, @gray-lightest 0%, @gray-lightest 70%, rgba(255, 255, 255, 1) 99%); 
+  }
+  .conversation-previews h6 {
+    margin-top: 0;
+    margin-bottom: 0.5em;
+  }
+  .from-me, .from-them {
+    max-height: 1.3em;
+    line-height: 1.3em;
+    overflow: hidden;
+    margin: 0;
+  }
+  .from-me .label, 
+  .from-them .label {
+    border-radius: 3px;
+    padding: 0.05em 0.6em 0.15em;
+
+  }
+  .message-preview-fade {
+    padding-top: 0;
+    margin-top: -1.3em;
+    background: linear-gradient(to right, rgba(255, 255, 255, 0) 75%, rgba(255, 255, 255, 1) 99%); /* W3C */
+    opacity: 0.8;
+    height: 1.3em;
+  }
+  a.message-link {
+    text-decoration: none;
+    color: @brand-primary;
+    display: block;
+  }
+  .pull-right {
+    font-size:12px;
+    padding-left: 1em;
+  }
+}

@@ -10,21 +10,19 @@
 // Read Sprockets README (https://github.com/sstephenson/sprockets#sprockets-directives) for details
 // about supported directives.
 //
-//= require jquery
-//= require jquery_ujs
-
-//= require bootstrap/transition
-//= require bootstrap/alert
-//= require bootstrap/button
-//= require bootstrap/carousel
-//= require bootstrap/collapse
-//= require bootstrap/dropdown
-//= require bootstrap/modal
-//= require bootstrap/tooltip
-//= require bootstrap/popover
-//= require bootstrap/scrollspy
-//= require bootstrap/tab
-//= require bootstrap/affix
+//= require jquery.js
+//= require jquery_ujs.js
+//= require bootstrap/transition.js
+//= require bootstrap/alert.js
+//= require bootstrap/button.js
+//= require bootstrap/carousel.js
+//= require bootstrap/collapse.js
+//= require bootstrap/dropdown.js
+//= require bootstrap/modal.js
+//= require bootstrap/tooltip.js
+//= require bootstrap/popover.js
+//= require bootstrap/scrollspy.js
+//= require bootstrap/tab.js
+//= require bootstrap/affix.js
 
 //= require bootstrap-datepicker
-//= require holder

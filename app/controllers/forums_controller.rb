@@ -1,8 +1,5 @@
 class ForumsController < ApplicationController
-  # before_action :set_forum, only: [:show]
-
   # GET /forums
-  # GET /forums.json
   def index
     # Show them the default forum
     redirect_to controller: 'forums', action: 'show', id: Forum.default_forum.slug
@@ -21,9 +18,4 @@ class ForumsController < ApplicationController
     end
     # TODO: display error if forum not found
   end
-
-  private
-    # Use callbacks to share common setup or constraints between actions.
-    def set_forum
-    end
 end

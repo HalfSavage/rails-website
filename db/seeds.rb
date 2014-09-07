@@ -36,6 +36,9 @@ FAKE_MEMBER_MIN_AGE_YEARS = 18.0
 # create enough to get up to this total
 FAKE_MINIMUM_THREAD_COUNT = 3000
 
+# Chance of the member specifying a first name
+FAKE_CHANCE_OF_HAVING_FIRST_NAME = 0.5
+
 # We call .sample on this array to figure out how many fake replies get attached
 # to each fake thread. We use an array instead of a simple range because we want
 # to heavily weight things towards *few* replies... most threads have only a few
@@ -228,8 +231,6 @@ def create_private_message(hs_messages,
     id_to = id_to || members[1]
 
     new_message = Message.new(
-      # pick a time for this message to have been "created"...
-      # ...random time between earliest_possible_message_time and right now
       :created_at => message_created_at,
       :message_type => MessageType.find(1),
       :member_from => id_from,
@@ -474,7 +475,8 @@ else
         FAKE_MEMBER_MAX_AGE_YEARS, 
         FAKE_MAX_MEMBER_ACCOUNT_AGE_DAYS, 
         FAKE_CHANCE_OF_MEMBER_BEING_REFERRED,
-        FAKE_CHANCE_OF_MEMBER_BEING_PAID)
+        FAKE_CHANCE_OF_MEMBER_BEING_PAID,
+        FAKE_CHANCE_OF_HAVING_FIRST_NAME)
     end
     # ActiveRecord::Base.connection_pool.clear_stale_cached_connections!
   end

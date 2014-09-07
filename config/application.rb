@@ -22,7 +22,7 @@ module Halfsavage
     # config.i18n.load_path += Dir[Rails.root.join('my', 'locales', '*.{rb,yml}').to_s]
     # config.i18n.default_locale = :de
 
-    config.assets.paths << "#{Rails.root}/app/assets/fonts"
+    config.assets.paths <<  Rails.root.join('app','assets','fonts')
     config.i18n.enforce_available_locales = true
     config.i18n.default_locale = :en
     config.secret_key_base = 'fartbanger' # this should probably be something besides 'fartbanger'
@@ -31,7 +31,7 @@ module Halfsavage
     # It always defaults to :ruby during rake:db:schema:dump
     # ref: https://github.com/rails/rails/issues/14209
     # ref: https://github.com/rails/rails/pull/13312
-    # workaround: "rake db:structure:dump" instead of "rake:db:schema:dump"
+    # workaround: "rake db:structure:dump" instead of "rake db:schema:dump"
     config.active_record.schema_format = :sql
     ActiveRecord::Base.schema_format = config.active_record.schema_format
 

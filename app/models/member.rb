@@ -1,4 +1,6 @@
 class Member < ActiveRecord::Base
+  include ActionView::Helpers # we need the truncate function
+
   attr_accessor :login
 
   # Include default devise modules. Others available are:
@@ -17,10 +19,17 @@ class Member < ActiveRecord::Base
   validates :email, uniqueness: {case_sensitive: false}
   validates :date_of_birth, presence: true
   validates :username, length: { minimum: 5, maximum: 30}
+  #validates :username_slug, presence: true
 
   # Scopes
   scope :moderators, -> { where(moderator: true) }
   scope :supermoderators, -> { where(supermoderator: true) }
+  scope :paid, -> { where(paid: true)}
+  scope :active, -> { where(active: true)}
+  scope :unbanned, -> { where(banned: false)}
+
+  # Hooks
+  before_save :username_to_slug 
 
   # Have to override this to allow login by email OR username (Devise default is email only)
   # See: https://github.com/plataformatec/devise/wiki/How-To%3a-Allow-users-to-sign-in-using-their-username-or-email-address
@@ -70,4 +79,23 @@ class Member < ActiveRecord::Base
   def member_entitlements_cache_key
     "#{banned?}_#{active?}_#{paid?}_#{moderator?}_#{supermoderator?}"
   end
+
+  def username_and_firstname
+    if first_name.nil?
+      username
+    else 
+      "#{username} (#{first_name})"
+    end
+  end 
+
+  def username_to_slug
+    if self.new_record? || self.username_changed? 
+      self.username_slug = self.username.parameterize
+      self.username_slug = truncate(self.username_slug, omission: '', length: 100)
+      # Ensure uniqueness of slug; this could DEFINITELY be less ugly!
+      while Member.where("username_slug=? and id<>coalesce(?,-1)", self.username_slug, self.id).any? do
+        self.username_slug += ('-' + rand(0..100).to_s)
+      end
+    end 
+  end 
 end

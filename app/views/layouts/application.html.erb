@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="/assets/holder.js?body=1"></script>
   <title><%= content_for?(:title) ? yield(:title) + ' - Half Savage' : 'Half Savage' %></title>
   <%= csrf_meta_tags %>
 
@@ -33,10 +34,8 @@
   <!-- For all other devices -->
   <!-- Size should be 32 x 32 pixels -->
   <%= favicon_link_tag 'favicon.ico', :rel => 'shortcut icon' %>
-
-
 </head>
-<body>
+<body class="controller-<%= params[:controller] %>">
 
 <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
   <!-- Brand and toggle get grouped for better mobile display -->
@@ -79,21 +78,15 @@
 </nav>
 
 <div class="container">
-  <div class="row">
-    <div class="col-md-12">
-      <%= half_savage_flash %>
-      <%= yield %>
-    </div>
-  </div>
-  <!--/row-->
-
+  <%= half_savage_flash %>
+  <!-- Begin yield to view -->
+  <%= yield %>
+  <!-- End yield to view -->
   <footer>
-    <p>&copy <%=Time.now.year%> Half Savage</p>
+    <p>&copy; <%=Time.now.year%> Half Savage</p>
   </footer>
-
 </div>
 <!-- /container -->
-
 
 <%= javascript_include_tag 'application' %>
 <script type="text/javascript">
@@ -101,7 +94,6 @@
     $('[data-toggle=tooltip]').tooltip({
       delay: { show: 500, hide: 100 }
     });
-
   })
 </script>
 <%= yield :page_bottom_script %>

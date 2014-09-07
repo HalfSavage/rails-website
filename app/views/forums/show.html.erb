@@ -1,34 +1,37 @@
 <% content_for :title, @forum.name %>
+  <div class="row">
+    <div class="col-md-12">
+			<div id="forum-list">
+				<%= render "forum_list" %>
+			</div>
 
-<div id="forum-list">
-	<%= render "forum_list" %>
-</div>
+			<div id="discussions">
+				<h2>Forum: <%=@forum.name%></h2>
+				<%
+				cache(@forum, :expires_in => 10.minutes) do
+					trending_tags = @forum.trending_tags
+					if trending_tags.count > 0
+						%>
+						<p>
+							Trending:
+							<% trending_tags.each do |tag| %>
+								<a href="/forums/@forum.id/tags/<%=tag.tag_text%>">#<%=tag.tag_text%></a>
+							<% end %>
+						</p>
+					<% end
+				end
+				%>
+				<%= will_paginate @discussions, inner_window: 2, renderer: BootstrapPagination::Rails %>
+				<%= render @discussions %>
+			  <%= will_paginate @discussions, inner_window: 2, renderer: BootstrapPagination::Rails %>
+			</div>
 
-<div id="discussions">
-	<h2>Forum: <%=@forum.name%></h2>
-	<%
-	cache(@forum, :expires_in => 10.minutes) do
-		trending_tags = @forum.trending_tags
-		if trending_tags.count > 0
-			%>
-			<p>
-				Trending:
-				<% trending_tags.each do |tag| %>
-					<a href="/forums/@forum.id/tags/<%=tag.tag_text%>">#<%=tag.tag_text%></a>
-				<% end %>
-			</p>
-		<% end
-	end
-	%>
-	<%= will_paginate @discussions, inner_window: 2, renderer: BootstrapPagination::Rails %>
-	<%= render @discussions %>
-  <%= will_paginate @discussions, inner_window: 2, renderer: BootstrapPagination::Rails %>
-</div>
+			<p id="notice"><%= notice %></p>
 
-<p id="notice"><%= notice %></p>
+			<% content_for :page_bottom_script do %>
+			<script>
 
-<% content_for :page_bottom_script do %>
-<script>
-
-</script>
-<% end %>
+			</script>
+			<% end %>
+    </div>
+  </div>

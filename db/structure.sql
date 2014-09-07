@@ -124,7 +124,7 @@ as (
   )
 
 select 
-  dense_rank() over (order by conversation_latest_message_id) as conversation_number,
+  dense_rank() over (order by conversation_latest_message_id desc) as conversation_number,
   *
 from 
   mes_window
@@ -336,6 +336,7 @@ CREATE TABLE forums_posts (
 CREATE TABLE members (
     id integer NOT NULL,
     username character varying(255),
+    username_slug character varying(512),
     first_name character varying(255),
     last_name character varying(255),
     referred_by_id integer,
@@ -1262,6 +1263,13 @@ CREATE UNIQUE INDEX index_members_on_reset_password_token ON members USING btree
 --
 
 CREATE UNIQUE INDEX index_members_on_username ON members USING btree (username);
+
+
+--
+-- Name: index_members_on_username_slug; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE UNIQUE INDEX index_members_on_username_slug ON members USING btree (username_slug);
 
 
 --

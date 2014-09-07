@@ -42,7 +42,8 @@ class Message < ActiveRecord::Base
       messages_per_conversation: 3
       }.merge(options)
 
-    options[:page_number] = options[:page_number] || 1
+    options[:page_number] = (options[:page_number] || 1).to_i
+
     member_id = (member.is_a? Member) ? member.id : member 
     viewing_member = options[:viewing_member] || ((member.is_a? Member) ? member : Member.find(member_id))
     messages = Message.find_by_sql ["select * from conversations(:member_id, null, :include_deleted) 
@@ -54,7 +55,8 @@ class Message < ActiveRecord::Base
       first_conversation: (1 + (options[:page_number]-1) * options[:conversations_per_page]), 
       last_conversation: (options[:conversations_per_page] * options[:page_number]), 
       include_deleted: options[:include_deleted]]
-    messages.each { |m| m.viewing_member = viewing_member } if viewing_member 
+    member = (member.is_a? Member) ? member : Member.find(member)
+    messages.each { |m| m.viewing_member = viewing_member }
 
     ActiveRecord::Associations::Preloader.new.preload(messages, [:member_from, :member_to, :post, :message_type]) if options[:eager_load]
     messages
@@ -69,6 +71,8 @@ class Message < ActiveRecord::Base
         and conversation_message_number <=3
         and (conversation_number between :first_conversation and :last_conversation)
       order by conversation_number", member_id: member_id, other_member_id: other_member_id, include_deleted: include_deleted.to_s.upcase]
+
+    member = (member.is_a? Member) ? member : Member.find(member)
     messages.each { |m| m.viewing_member = member } 
   end 
 
@@ -79,6 +83,17 @@ class Message < ActiveRecord::Base
         and ((member_to_id=:member_id and deleted_by_recipient is null) or (member_from_id=:member_id and deleted_by_sender is null))
         and id = :id", member_id: member_id, id: id)
   end 
+
+  def other_member 
+    return nil if viewing_member.nil?
+    return member_to if viewing_member == member_from 
+    member_from
+  end
+
+  def from_other_member?
+    return nil if viewing_member.nil?
+    member_from == viewing_member
+  end  
 
   def not_moderator_voice?
     !moderator_voice?
