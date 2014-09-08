@@ -21,7 +21,7 @@
           <h6><%= member_link(convo[0].other_member, include_first_name: true) %></h6>
           <% convo.each do |message|
             %>
-            <a class="message-link" href="/conversations/<%=convo[0].other_member.username_slug%>">
+            <a class="message-link" href="/messages/<%=convo[0].other_member.username_slug%>">
             <div class="pull-right muted"><%= time_ago_in_words_short(message.created_at) %></div>
             <% if message.member_from == current_member %>
               <p class="from-me">
@@ -65,7 +65,7 @@
   });
 
   function navigateToConversation(e) {
-    window.location.href='/conversations/' + $(e.currentTarget).data('conversation-with');
+    window.location.href='/messages/' + $(e.currentTarget).data('conversation-with');
   }
 </script>
 <% end %>
