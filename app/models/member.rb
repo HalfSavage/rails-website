@@ -42,6 +42,10 @@ class Member < ActiveRecord::Base
     end
   end
 
+  def to_i 
+    id
+  end 
+
   def unpaid?
     !paid?
   end
