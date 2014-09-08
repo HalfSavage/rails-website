@@ -1,5 +1,4 @@
 class Message < ActiveRecord::Base
-
   attr_accessor :ignore_sender_permissions 
 
 	belongs_to :member_from, class_name: 'Member', foreign_key: 'member_from_id'
@@ -15,6 +14,8 @@ class Message < ActiveRecord::Base
   validate :validate_sender_is_moderator
   validate :validate_not_messaging_self
 
+  default_scope { includes(:member_to, :member_from) } 
+
   attr_accessor :viewing_member # assumed to be the same as the person we're viewing messages for, unless a value supplied
 
   def obscure_content? 
@@ -27,10 +28,14 @@ class Message < ActiveRecord::Base
     options = {
       include_deleted: false,
       }.merge(options)
-    member_id = (member.is_a? Member) ? member.id : member 
+    member_id = member.to_i 
     result = ActiveRecord::Base.connection.execute("select max(conversation_number) as the_count from conversations(#{member_id.to_i}, null, 'f');");
     result[0]["the_count"].to_i
   end 
+
+  #def self.messages_between_members(member1, member2)
+  #  Message.where("154 in (member_from_id, member_to_id) and 223 in (member_from_id, member_to_id)").order("some bullshit i'll fill in later")
+  #end 
 
   def self.conversations_for_member(member, options = {})
     options = {
@@ -44,7 +49,7 @@ class Message < ActiveRecord::Base
 
     options[:page_number] = (options[:page_number] || 1).to_i
 
-    member_id = (member.is_a? Member) ? member.id : member 
+    member_id = member.to_i  
     viewing_member = options[:viewing_member] || ((member.is_a? Member) ? member : Member.find(member_id))
     messages = Message.find_by_sql ["select * from conversations(:member_id, null, :include_deleted) 
       where 
@@ -58,12 +63,13 @@ class Message < ActiveRecord::Base
     member = (member.is_a? Member) ? member : Member.find(member)
     messages.each { |m| m.viewing_member = viewing_member }
 
+    # Manually eager load associations
     ActiveRecord::Associations::Preloader.new.preload(messages, [:member_from, :member_to, :post, :message_type]) if options[:eager_load]
     messages
   end 
 
   def self.conversation_for_members(member, other_member, include_deleted = false)
-    member_id = (member.is_a? Member) ? member.id : member 
+    member_id = member.to_i 
     other_member_id = (other_member.is_a? Member) ? other_member.id : other_member
     
     messages = Message.find_by_sql ["select * from conversations(:member_id, :other_member_id, :include_deleted) 
@@ -77,7 +83,7 @@ class Message < ActiveRecord::Base
   end 
 
   def self.find_for_member(member, id)
-    member_id = (member.is_a? Member) ? member.id : member 
+    member_id = member.to_i
 
     Message.where("(member_to_id=:member_id or member_from_id=:member_id) 
         and ((member_to_id=:member_id and deleted_by_recipient is null) or (member_from_id=:member_id and deleted_by_sender is null))
