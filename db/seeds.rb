@@ -572,6 +572,26 @@ else
     hs_messages = HalfSavageMessages.new  if (i % 20 == 0)
     create_private_message hs_messages, earliest_message_time, latest_message_time, (rand(4)==0), [0,0,0,0,1,2,3,4,10,20,30].sample
   end
-  puts ' done creating fake messages'
+  puts ' done creating fake messages.'
+
+  # Some of the database code, such as the conversations function, assume that the message id's
+  # are in chronological order. In other words, message id #4 comes before message id #5 which
+  # comes before message id #6 and so forth. Because we faked the created_at dates for this
+  # seed data, we now want to reorder the id's of the messages table in chrono order
+  print 'Reordering message id''s...'
+  sql = <<-EOT
+  update messages set id=id + (select count(1) from messages);
+  with messages_by_created_at as (
+    select 
+      id as old_id,
+      row_number() over (order by created_at) as new_id
+    from 
+      messages 
+    order by created_at
+  )
+  update messages set id = (select new_id from messages_by_created_at where old_id = id);
+  EOT
+  ActiveRecord::Base.connection.execute(sql)
+  puts "done"
 end
 puts ''
