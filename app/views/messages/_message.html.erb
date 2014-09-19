@@ -1,0 +1,7 @@
+<div class="message">
+<div class="pull-right muted"><%= time_ago_in_words_short(message.created_at) %></div>
+<p>
+  <%= message.member_from == current_member ? 'You: ' : 'Them: ' %>  
+  <%= message.body %>
+</p>
+</div>

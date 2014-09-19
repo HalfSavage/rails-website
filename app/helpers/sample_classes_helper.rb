@@ -1,0 +1,2 @@
+module SampleClassesHelper
+end

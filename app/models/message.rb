@@ -33,9 +33,9 @@ class Message < ActiveRecord::Base
     result[0]["the_count"].to_i
   end 
 
-  #def self.messages_between_members(member1, member2)
-  #  Message.where("154 in (member_from_id, member_to_id) and 223 in (member_from_id, member_to_id)").order("some bullshit i'll fill in later")
-  #end 
+  def self.messages_for_members(viewing_member, other_member)
+    Message.where("? in (member_from_id, member_to_id) and ? in (member_from_id, member_to_id)", viewing_member.to_i, other_member.to_i).order("id desc")
+  end 
 
   def self.conversations_for_member(member, options = {})
     options = {

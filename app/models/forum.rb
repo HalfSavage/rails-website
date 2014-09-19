@@ -49,7 +49,7 @@ class Forum < ActiveRecord::Base
     end
 
     # Todo: filter out posts from members ignored by member, etc.
-    Discussion.where(forum: self).order("coalesce(reply_created_at, created_at) desc")
+    Discussion.where(forum: self).order("coalesce(reply_created_at, created_at) desc").includes(:member)
   end
 
   def create_slug

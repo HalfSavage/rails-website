@@ -1,0 +1,14 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <strong>Description:</strong>
+  <%= @sample_class.description %>
+</p>
+
+<p>
+  <strong>Number of bloits:</strong>
+  <%= @sample_class.number_of_bloits %>
+</p>
+
+<%= link_to 'Edit', edit_sample_class_path(@sample_class) %> |
+<%= link_to 'Back', sample_classes_path %>

@@ -110,10 +110,10 @@ as (
     mes.deleted_by_sender,
     mes.deleted_by_recipient,
     mes.moderator_voice
-	from
-	  messages mes
-	where
-	 $1 in (mes.member_to_id, member_from_id)
+  from
+    messages mes
+  where
+   $1 in (mes.member_to_id, member_from_id)
    and coalesce($2,-1) in (mes.member_to_id, mes.member_from_id, -1)
    and (
     (mes.member_from_id=$1 and (deleted_by_sender is null or $3=TRUE))
@@ -361,7 +361,8 @@ CREATE TABLE members (
     current_sign_in_ip character varying(255),
     last_sign_in_ip character varying(255),
     gender_id integer,
-    paid boolean DEFAULT false NOT NULL
+    paid boolean DEFAULT false NOT NULL,
+    fake_portrait integer
 );
 
 
@@ -872,6 +873,38 @@ ALTER SEQUENCE relationships_id_seq OWNED BY relationships.id;
 
 
 --
+-- Name: sample_classes; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE TABLE sample_classes (
+    id integer NOT NULL,
+    description character varying(255),
+    number_of_bloits integer,
+    created_at timestamp without time zone,
+    updated_at timestamp without time zone
+);
+
+
+--
+-- Name: sample_classes_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE sample_classes_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: sample_classes_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE sample_classes_id_seq OWNED BY sample_classes.id;
+
+
+--
 -- Name: schema_migrations; Type: TABLE; Schema: public; Owner: -; Tablespace: 
 --
 
@@ -1071,6 +1104,13 @@ ALTER TABLE ONLY relationships ALTER COLUMN id SET DEFAULT nextval('relationship
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
+ALTER TABLE ONLY sample_classes ALTER COLUMN id SET DEFAULT nextval('sample_classes_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: -
+--
+
 ALTER TABLE ONLY tags ALTER COLUMN id SET DEFAULT nextval('tags_id_seq'::regclass);
 
 
@@ -1192,6 +1232,14 @@ ALTER TABLE ONLY profile_views
 
 ALTER TABLE ONLY relationships
     ADD CONSTRAINT relationships_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: sample_classes_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY sample_classes
+    ADD CONSTRAINT sample_classes_pkey PRIMARY KEY (id);
 
 
 --
@@ -1591,4 +1639,6 @@ INSERT INTO schema_migrations (version) VALUES ('20140320024806');
 INSERT INTO schema_migrations (version) VALUES ('20140320045856');
 
 INSERT INTO schema_migrations (version) VALUES ('20140320170014');
+
+INSERT INTO schema_migrations (version) VALUES ('20140911205825');
 

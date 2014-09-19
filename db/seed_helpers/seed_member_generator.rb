@@ -15,6 +15,10 @@ class SeedMemberGenerator
     @@male_names = array_from_file('db/seed_helpers/male_names.txt') 
     @@female_names = array_from_file('db/seed_helpers/female_names.txt') 
     @@neutral_names = array_from_file('db/seed_helpers/neutral_names.txt') 
+
+    @@male_portraits = [1,3,5,7,8,9,10]
+    @@female_portraits = [2,4,6,7,8,11]
+    @@neutral_portraits = [7,8,9]
     
     def self.random_name(gender_id)
       case gender_id 
@@ -53,12 +57,20 @@ class SeedMemberGenerator
         new_member.referred_by = Member.where("created_at < ?", new_member.created_at).order("RANDOM()").first
       end
 
-      
       new_member.first_name = random_name(new_member.gender_id) if rand(0.0..1.0) <= chance_of_having_first_name
-
-
-
       new_member.paid = (rand < chance_of_being_paid)
+
+      # 80% of them get fake portraits 
+      if rand < 0.8 then 
+        case new_member.gender.id 
+        when 1 
+          new_member.fake_portrait = @@male_portraits.sample 
+        when 2 
+          new_member.fake_portrait = @@female_portraits.sample 
+        when 3
+          new_member.fake_portrait = @@neutral_portraits.sample 
+        end 
+      end 
 
       if !new_member.valid? then
         #puts "\nMember can't be saved."
@@ -67,6 +79,7 @@ class SeedMemberGenerator
       else
         new_member.save
       end
+
 
       # 80% of them get addresses
       if rand < 0.8 then 

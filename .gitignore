@@ -28,6 +28,3 @@ markov_dictionary.mmd
 config/database.yml
 temp.sql
 
-bin/rails
-
-bin/rake

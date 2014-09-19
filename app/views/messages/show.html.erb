@@ -1,0 +1,41 @@
+<% content_for :title  do "Conversations with #{@other_member.username_and_first_name}" end %>
+
+<div class="row">
+  <div class="col-md-3">
+    <p class="text-center">
+      <img src="/assets/members/<%= @other_member.fake_portrait %>.jpg" style="width:192px; height:192px">
+    </p>
+    <p class="text-center">
+    <%= member_link(@other_member) %><br>
+    <small><%= @other_member.age_gender_location %></small> 
+    </p>
+  </div>
+  <div class="col-md-9">
+  <%= form_for Message.new do |f| %>
+  <%= f.hidden_field :member_to_id, value: @other_member.id %>
+  <%= f.text_area :body, size: "60x12" %>
+  <%= f.submit "Create" %>
+  <% end %>
+
+  <%= render @messages %>
+  </div>
+</div>
+
+<% content_for :page_bottom_script do %>
+<script type="text/javascript">
+console.log("Hello?");
+$('#new_message').submit(function() {  
+    console.log("hey! submitting");
+    var valuesToSubmit = $(this).serialize();
+    $.ajax({
+        type: 'POST',
+        url: $(this).attr('action'), //sumbits it to the given url of the form
+        data: valuesToSubmit,
+        dataType: "JSON" // you want a difference between normal and ajax-calls, and json is standard
+    }).success(function(json){
+        console.log("Happy happy!");
+    });
+    return false; // prevents normal behaviour
+});
+</script>
+<% end %>

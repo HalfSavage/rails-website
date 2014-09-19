@@ -1,0 +1,27 @@
+<h1>Listing sample_classes</h1>
+
+<table>
+  <thead>
+    <tr>
+      <th>Description</th>
+      <th>Number of bloits</th>
+      <th colspan="3"></th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <% @sample_classes.each do |sample_class| %>
+      <tr>
+        <td><%= sample_class.description %></td>
+        <td><%= sample_class.number_of_bloits %></td>
+        <td><%= link_to 'Show', sample_class %></td>
+        <td><%= link_to 'Edit', edit_sample_class_path(sample_class) %></td>
+        <td><%= link_to 'Destroy', sample_class, method: :delete, data: { confirm: 'Are you sure?' } %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<br>
+
+<%= link_to 'New Sample class', new_sample_class_path %>

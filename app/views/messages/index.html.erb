@@ -15,7 +15,7 @@
       %>
         <div class="row conversations" data-conversation-with="<%=convo[0].other_member.username_slug %>">
           <div class="col-md-1">
-            <img data-src="holder.js/48x48/gray">
+            <img src="/assets/members/<%= convo[0].other_member.fake_portrait %>.jpg" style="width:64px; height:64px">
           </div>
           <div class="col-md-11 conversation-previews">
           <h6><%= member_link(convo[0].other_member, include_first_name: true) %></h6>

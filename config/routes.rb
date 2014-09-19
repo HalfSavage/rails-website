@@ -1,4 +1,6 @@
 Halfsavage::Application.routes.draw do
+  resources :sample_classes
+
   resources :discussion_views
 
   resources :profile_views

@@ -1,4 +1,11 @@
 <div class="discussion" data-slug="<%=discussion.slug%>">
+  <p style="float: left; padding-right: 1em">
+    <% if discussion.member.fake_portrait.present? -%>
+      <img src="/assets/members/<%=discussion.member.fake_portrait%>.jpg" style="width:48px; height:48px">
+    <% else -%>
+      <img data-src="holder.js/48x48/#fff:#ddd">
+    <% end -%>
+  </p>
   <h5><a href="/discussions/<%=discussion.slug%>"><%=discussion.subject%></a>
 
   </h5>
