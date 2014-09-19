@@ -18,7 +18,7 @@ pickle-email-*.html
 .project
 config/initializers/secret_token.rb
 /.idea
-bin/*
+# bin/*
 
 # misc - added by booty
 rebuild-tags.rb
