@@ -25,6 +25,6 @@ rebuild-tags.rb
 .tags
 *.sublime-*
 markov_dictionary.mmd
-config/database.yml
+# config/database.yml
 temp.sql
 
