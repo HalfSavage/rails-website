@@ -55,7 +55,7 @@ SENTENCES_PER_FORUM_POST_PARAGRAPH = [1,2,2,3,4,5]
 MAX_POST_LENGTH_CHARACTERS = 8000
 
 # How many Markov chain gibberish sentences to create. Post bodies will be populated with these.
-MARKOV_SENTENCES_TO_GENERATE = 500
+MARKOV_SENTENCES_TO_GENERATE = 2000
 
 # If there are less private messages than this, create enough private messages to get to this total
 MINIMUM_PRIVATE_MESSAGES_COUNT = 8000
@@ -92,14 +92,14 @@ def markov_text(number_of_sentences, number_of_paragraphs, markov_sentences, max
   (1..number_of_paragraphs.sample).each { |p|
     body += "\n\n" if p>1
     (1..number_of_sentences.sample).each { |s|
-      body << markov_sentences.sample
+      body << markov_sentences.sample << ' '
       body << ' #' << applicable_hashtags.sample << ' ' if rand < CHANCE_OF_HASHTAG_AFTER_POST_SENTENCE
     }
   }
 
   while body.length < 10
     # kludge! not sure why it returns too little sometimes
-    body << ' ' << markov_sentences.sample
+    body << ' ' << markov_sentences.sample << ' '
     body << ' #' << applicable_hashtags.sample << ' ' if rand < CHANCE_OF_HASHTAG_AFTER_POST_SENTENCE
   end
 
