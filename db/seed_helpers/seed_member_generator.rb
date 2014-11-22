@@ -16,9 +16,9 @@ class SeedMemberGenerator
     @@female_names = array_from_file('db/seed_helpers/female_names.txt') 
     @@neutral_names = array_from_file('db/seed_helpers/neutral_names.txt') 
 
-    @@male_portraits = [1,3,5,7,8,9,10]
-    @@female_portraits = [2,4,6,7,8,11]
-    @@neutral_portraits = [7,8,9]
+    @@male_portraits = [1,3,5,7,8,9,10,12,15,16,17,18,19]
+    @@female_portraits = [2,4,6,7,8,11,13,14,17,20]
+    @@neutral_portraits = [7,8,9,17,16]
     
     def self.random_name(gender_id)
       case gender_id 
