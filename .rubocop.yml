@@ -1,0 +1,13 @@
+Metrics/LineLength:
+  Max: 255
+
+Style/HashSyntax:
+  Enabled: true
+  EnforcedStyle: ruby19
+  SupportedStyles:
+    - ruby19
+    - hash_rockets
+
+# There's no performance advantage to single-quoted strings. This is pointless IMHO
+Style/StringLiterals:
+  Enabled: false
