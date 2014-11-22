@@ -17,7 +17,8 @@ rerun.txt
 pickle-email-*.html
 .project
 config/initializers/secret_token.rb
-/.idea
+.idea
+/app/assets/images/members
 # bin/*
 
 # misc - added by booty
