@@ -1,7 +1,7 @@
 class Forum < ActiveRecord::Base
   include HalfSavageExceptions
 
-  validates :name, presence: true, uniqueness: true, length: {minimum: 5, maximum: 25}
+  validates :name, presence: true, uniqueness: true, length: { minimum: 5, maximum: 25 }
 
   has_many :forums_posts
   has_many :posts, through: :forums_posts
@@ -13,15 +13,14 @@ class Forum < ActiveRecord::Base
   scope :active_moderator, -> { where(moderator_only: true, active: true, special: false) }
   scope :special, -> { where(special: true, active: true).order(:display_order) }
 
-
   def forum_permissions_check!(member = nil)
     # check permissions on forum
-    raise MustNotBeBannedException.new "Banned members don't see forums. Sorry." if !member.nil? && member.banned?
-    raise MustNotBeInactiveException.new "This member account is inactive." if !member.nil? && member.inactive?
-    raise MustBeModeratorException.new "This forum is for moderators only" if moderator_only? && (member.nil? || member.not_moderator?)
-    raise MustBeAuthenticatedException.new "This forum is for members only" if !visible_to_public? && member.nil?
-    raise MustBePaidException.new "This forum is for paid members only" if paid_member_only? && (member.nil? || member.unpaid?)
-    raise MustBeModeratorException.new "This forum is inactive" if inactive? && member.not_moderator?
+    fail MustNotBeBannedException "Banned members don't see forums. Sorry." if !member.nil? && member.banned?
+    fail MustNotBeInactiveException "This member account is inactive." if !member.nil? && member.inactive?
+    fail MustBeModeratorException "This forum is for moderators only" if moderator_only? && (member.nil? || member.not_moderator?)
+    fail MustBeAuthenticatedException "This forum is for members only" if !visible_to_public? && member.nil?
+    fail MustBePaidException "This forum is for paid members only" if paid_member_only? && (member.nil? || member.unpaid?)
+    fail MustBeModeratorException "This forum is inactive" if inactive? && member.not_moderator?
   end
 
   # member can be a member_id or a Member
@@ -31,20 +30,20 @@ class Forum < ActiveRecord::Base
     # If it's a "special" forum, pull discussion from the appropriate place
     if special?
       case slug
-        when 'all'
-          return Discussion.order("coalesce(reply_created_at, created_at) desc")
-        when 'most-active'
-          return Discussion.most_active.order('score desc')
-        when 'created-by-member'
-          return Discussion.created_by(member)
-        when 'recently-viewed-by-member'
-          return Discussion.viewed_by(member)
-        when 'newest'
-          return Discussion.order("created_at desc")
-        when 'active-with-friends-of-member'
-          return Discussion.most_active_for_friends_of(member)
-        else
-          raise Exception.new "Not sure how to handle the special forum '#{slug}'"
+      when 'all'
+        return Discussion.order("coalesce(reply_created_at, created_at) desc")
+      when 'most-active'
+        return Discussion.most_active.order('score desc')
+      when 'created-by-member'
+        return Discussion.created_by(member)
+      when 'recently-viewed-by-member'
+        return Discussion.viewed_by(member)
+      when 'newest'
+        return Discussion.order("created_at desc")
+      when 'active-with-friends-of-member'
+        return Discussion.most_active_for_friends_of(member)
+      else
+        fail "Not sure how to handle the special forum '#{slug}'"
       end
     end
 
@@ -53,7 +52,7 @@ class Forum < ActiveRecord::Base
   end
 
   def create_slug
-    self.slug = name.parameterize if self.slug.nil?
+    self.slug = name.parameterize if slug.nil?
   end
 
   def trending_tags
@@ -81,7 +80,7 @@ class Forum < ActiveRecord::Base
 
     # Regular user (can see all non-mod forums)
     # TODO: differentiate between paid and non-paid users
-    return Forum.where("active=true and moderator_only!=true and slug=?", slug).first
+    Forum.where("active=true and moderator_only!=true and slug=?", slug).first
   end
 
   def self.regular_for_member(member)
@@ -93,7 +92,7 @@ class Forum < ActiveRecord::Base
 
     # Regular user (can see all non-mod forums)
     # TODO: differentiate between paid and non-paid users
-    return Forum.where("active=true and special=false and moderator_only!=true").order("display_order")
+    Forum.where("active=true and special=false and moderator_only!=true").order("display_order")
   end
 
   def self.default_forum()
@@ -102,7 +101,7 @@ class Forum < ActiveRecord::Base
 
   def self.find_by_slug(slug)
     # See if it's a "normal" forum
-    Forum.where('slug=?',slug)
+    Forum.where('slug=?', slug)
   end
 
   def inactive?
@@ -112,5 +111,4 @@ class Forum < ActiveRecord::Base
   def invisible_to_public?
     !visible_to_public
   end
-
 end

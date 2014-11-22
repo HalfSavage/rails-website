@@ -1,5 +1,5 @@
 
-class Post < ActiveRecord::Base
+class Post < ActiveRecord::Bas
   include ActionView::Helpers # we need the truncate function
 
   # The parent could be the OP or another post in that thread, if
@@ -9,9 +9,8 @@ class Post < ActiveRecord::Base
 
   # Relations
   belongs_to :member
-  has_many :forums_posts #, autosave: true
-  # has_many :forums, -> { uniq },  through: :forums_posts  # see for explanation of uniq: http://stackoverflow.com/questions/16569994/deprecation-warning-when-using-has-many-through-uniq-in-rails-4
-  has_many :forums,  through: :forums_posts  # see for explanation of uniq: http://stackoverflow.com/questions/16569994/deprecation-warning-when-using-has-many-through-uniq-in-rails-4
+  has_many :forums_posts
+  has_many :forums,  through: :forums_posts
   has_many :post_actions
 
   # TODO: add relation to PostTag and Tag (through PostTag)
@@ -23,13 +22,13 @@ class Post < ActiveRecord::Base
 
   # Validations that always happen
   # TODO: Validate duplicate posts by a single member
-  validates :body, length: {minimum: 10, maximum: 8000}
+  validates :body, length: { minimum: 10, maximum: 8000 }
   validates :member, presence: true
   validate :member_may_post_in_forum
   validate :discussion_belongs_to_forum
 
   # Validations that apply only if this post is the parent of a new discussion (a.k.a. "thread")
-  validates :subject, length: {minimum: 5, maximum: 200}, if: :discussion_parent?
+  validates :subject, length: { minimum: 5, maximum: 200 }, if: :discussion_parent?
   validates_presence_of :forums_posts, if: :discussion_parent?, message: "...discussion must belong to some forums"
   validates_presence_of :subject, if: :discussion_parent?
   validates_presence_of :slug, if: :discussion_parent?
@@ -49,12 +48,12 @@ class Post < ActiveRecord::Base
   # that we can put in the URL so that we can have pretty, Google-able URLs
   # like http://halfsavage.com/discussions/why-does-my-poop-smell or whatever
   def create_slug
-    if self.subject.present? && self.slug.blank?
+    if subject.present? && slug.blank?
       self.slug = subject.parameterize
-      self.slug = truncate(self.slug, omission: '', length: Rails.configuration.discussion_slug_length, separator: ' ')
+      self.slug = truncate(slug, omission: '', length: Rails.configuration.discussion_slug_length, separator: ' ')
     end
     # Ensure uniqueness of slug; this could probably be less ugly!
-    while Post.where("slug=? and id<>coalesce(?,-1)", self.slug, self.id).any? do
+    while Post.where("slug=? and id<>coalesce(?,-1)", slug, id).any?
       self.slug += ('-' + rand(0..100).to_s)
     end
   end
@@ -75,15 +74,15 @@ class Post < ActiveRecord::Base
     # We need a unique, case-insensitive list of tags
     # tags.uniq! would be case-sensitive but luckly .uniq and .uniq! can accept a block
     tags.flatten!
-    tags.uniq!{ |elem| elem.downcase }
+    tags.uniq!(&:downcase)
 
     # We'll only parse the first max_tags_per_post tags because unlike a single tweet,
     # you could stuff a truly obnoxious number of tags into a single post
-    tags.take(MAX_TAGS_PER_POST).each{ |tag_text|
+    tags.take(MAX_TAGS_PER_POST).each do |tag_text|
       tag = Tag.find_by_tag_or_new(tag_text)
       tag.save! if tag.new_record?
-      PostTag.create!({tag: tag, post: self, created_at: self.created_at})
-    }
+      PostTag.create!({ tag: tag, post: self, created_at: created_at })
+    end
   end
 
   def discussion_parent?
@@ -114,8 +113,8 @@ class Post < ActiveRecord::Base
     errors[:base] << "Discussion must belong to at least one forum" if discussion_parent? && forums.none?
   end
 
+  private
 
-private
   def member_may_post_in_forum
     return nil if forums.nil?
     errors[:base] << "Banned members can't post in forums" if member.banned?
@@ -136,5 +135,4 @@ private
     end
     errors[:base] << 'You don''t have permission to post in this forum.' unless has_permission
   end
-
 end

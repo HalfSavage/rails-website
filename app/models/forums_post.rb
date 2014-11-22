@@ -1,5 +1,5 @@
 class ForumsPost < ActiveRecord::Base
-  belongs_to :forum 
+  belongs_to :forum
   belongs_to :post
 
   # Todo: Should probably have timestamps and an associated Member

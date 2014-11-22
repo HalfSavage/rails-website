@@ -22,7 +22,7 @@ module Halfsavage
     # config.i18n.load_path += Dir[Rails.root.join('my', 'locales', '*.{rb,yml}').to_s]
     # config.i18n.default_locale = :de
 
-    config.assets.paths <<  Rails.root.join('app','assets','fonts')
+    config.assets.paths <<  Rails.root.join('app', 'assets', 'fonts')
     config.i18n.enforce_available_locales = true
     config.i18n.default_locale = :en
     config.secret_key_base = 'fartbanger' # this should probably be something besides 'fartbanger'
@@ -40,9 +40,8 @@ module Halfsavage
     # and also need to change calls to devise_parameter_sanitizer in member.rb
     # ref: http://stackoverflow.com/questions/2997179/ror-devise-sign-in-with-username-or-email
     # also ref: https://github.com/plataformatec/devise/wiki/How-To%3a-Allow-users-to-sign-in-using-their-username-or-email-address
-    config.authentication_keys = [ :email, :username ]
+    config.authentication_keys = [:email, :username]
 
     config.autoload_paths += %W(#{config.root}/lib)
-
   end
 end

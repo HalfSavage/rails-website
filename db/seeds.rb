@@ -249,18 +249,18 @@ def create_private_message(hs_messages,
   # Roll the dice. Message deleted by recipient?
   if rand(15) < 1
     new_message.deleted_by_recipient = rand((new_message.seen || new_message.created_at)..Time.now)
-  end 
+  end
 
   # Roll the dice. Message deleted by sender?
   if rand(15) < 1
     new_message.deleted_by_sender = rand(new_message.created_at..Time.now)
-  end 
+  end
 
   if new_message.member_from.moderator? and rand(2)==0
     new_message.moderator_voice = true
   end
 
-  new_message.ignore_sender_permissions = true 
+  new_message.ignore_sender_permissions = true
   if new_message.invalid?
     puts "\nMessage can't be fucking saved!"
     puts new_message
@@ -272,7 +272,7 @@ def create_private_message(hs_messages,
       print '.'
       if rand < 0.5
         create_private_message hs_messages, message_created_at, Time.now, false, 0, id_to, id_from
-      else 
+      else
         create_private_message hs_messages, message_created_at, Time.now, false, 0, id_from, id_to
       end
     }
@@ -468,12 +468,12 @@ else
     hs_usernames = HalfSavageUserNames.new if i % 50 == 0
     print "#{i}... " if i % 10 == 0
     ActiveRecord::Base.connection_pool.with_connection do
-      SeedMemberGenerator.generate( 
-        hs_usernames, 
-        [male, male, male, female, female, female, complicated].sample, 
-        FAKE_MEMBER_MIN_AGE_YEARS, 
-        FAKE_MEMBER_MAX_AGE_YEARS, 
-        FAKE_MAX_MEMBER_ACCOUNT_AGE_DAYS, 
+      SeedMemberGenerator.generate(
+        hs_usernames,
+        [male, male, male, female, female, female, complicated].sample,
+        FAKE_MEMBER_MIN_AGE_YEARS,
+        FAKE_MEMBER_MAX_AGE_YEARS,
+        FAKE_MAX_MEMBER_ACCOUNT_AGE_DAYS,
         FAKE_CHANCE_OF_MEMBER_BEING_REFERRED,
         FAKE_CHANCE_OF_MEMBER_BEING_PAID,
         FAKE_CHANCE_OF_HAVING_FIRST_NAME)
@@ -486,7 +486,7 @@ if current_moderator_count >= FAKE_MINIMUM_MOD_COUNT
   puts "Okay, we have plenty of mods (#{current_moderator_count} of #{FAKE_MINIMUM_MOD_COUNT}). Moving along."
 else
   some_losers = Member.where('moderator=false').order('RANDOM()').take(FAKE_MINIMUM_MOD_COUNT - current_moderator_count)
-  print "\nMaking #{some_losers.count} into mods... "
+  print "\nMaking #{some_losers.count} into mods... "1
   some_losers.each { |loser|
     loser.moderator = true
     loser.save!
@@ -582,11 +582,11 @@ else
   sql = <<-EOT
   update messages set id=id + (select count(1) from messages);
   with messages_by_created_at as (
-    select 
+    select
       id as old_id,
       row_number() over (order by created_at) as new_id
-    from 
-      messages 
+    from
+      messages
     order by created_at
   )
   update messages set id = (select new_id from messages_by_created_at where old_id = id);
